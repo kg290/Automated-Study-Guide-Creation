@@ -1,0 +1,55 @@
+Project Workflow – Generative AI Agent for Automated Study Guide Creation
+
+1. User opens the web application.
+
+2. User uploads educational files:
+- PDF
+- DOCX
+
+3. System detects file type.
+
+4. If DOCX:
+- Extract text directly.
+
+5. If PDF:
+- Try normal text extraction first.
+
+6. If PDF has little/no readable text:
+- Use Google Cloud Vision API OCR.
+
+7. Extracted content is cleaned:
+- Remove extra spaces
+- Remove unwanted symbols
+- Remove repeated headers/footers
+
+8. Large text is divided into smaller chunks.
+
+9. Each chunk is converted into embeddings using sentence-transformers.
+
+10. Embeddings are stored in ChromaDB.
+
+11. User selects required output:
+- Summary
+- Study Notes
+- Flashcards
+- Q&A
+- Beginner / Intermediate / Advanced mode
+
+12. Relevant chunks are retrieved from ChromaDB using semantic search.
+
+13. Retrieved content is sent to Gemini API.
+
+14. Gemini generates study material based only on uploaded content.
+
+15. Results are shown in frontend:
+- Summary tab
+- Flashcards tab
+- Q&A tab
+- Difficulty tabs
+
+16. User can copy, download, or regenerate outputs.
+
+17. Optional:
+- Save history
+- Export as PDF
+- Chat with uploaded notes

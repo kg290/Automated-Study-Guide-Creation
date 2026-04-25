@@ -1,0 +1,938 @@
+{
+  "generated_at": "2026-04-23 23:51:09",
+  "api_base": "http://127.0.0.1:8001/api/v1",
+  "pdf_count": 5,
+  "items": [
+    {
+      "pdf": "Computer Networks - Complete Notes.pdf",
+      "path": "D:\\Hackathon\\AI CP 2\\Input\\Computer Networks - Complete Notes.pdf",
+      "job_id": "40aef43bc70f4a21ac9076f1990ba944",
+      "session_id": "468fe79f461a4e798c68716e7f163ba3",
+      "duration_seconds": 25.29,
+      "timeline": [
+        {
+          "elapsed_seconds": 0.16,
+          "status": "processing",
+          "stage": "extracting",
+          "progress": 10,
+          "message": "Extracting text from uploaded documents."
+        },
+        {
+          "elapsed_seconds": 2.67,
+          "status": "processing",
+          "stage": "embedding",
+          "progress": 50,
+          "message": "Creating embeddings and storing vectors in ChromaDB."
+        },
+        {
+          "elapsed_seconds": 5.18,
+          "status": "processing",
+          "stage": "generating",
+          "progress": 85,
+          "message": "Generating structured study material with Gemini."
+        },
+        {
+          "elapsed_seconds": 25.29,
+          "status": "completed",
+          "stage": "completed",
+          "progress": 100,
+          "message": "Study guide generation finished."
+        }
+      ],
+      "final_status": "completed",
+      "final_stage": "completed",
+      "error": null,
+      "raw_job_payload": {
+        "job_id": "40aef43bc70f4a21ac9076f1990ba944",
+        "session_id": "468fe79f461a4e798c68716e7f163ba3",
+        "status": "completed",
+        "progress": 100,
+        "stage": "completed",
+        "message": "Study guide generation finished.",
+        "error": null,
+        "result": {
+          "summary_notes": "The Application Layer (Layer 7) is the highest OSI layer, providing network services directly to user applications. It combines Session, Presentation, and Application layers in the TCP/IP model [source:ComputerNetworks-CompleteNotes.pdf | chunk:25]. Its functions include data representation, network service access, application protocols, and session management [source:ComputerNetworks-CompleteNotes.pdf | chunk:25]. The Presentation Layer (Layer 6) is responsible for data formatting and manipulation, including translation, encryption/decryption, and compression [source:ComputerNetworks-CompleteNotes.pdf | chunk:6]. Protocols like TLS/SSL, JPEG, and MPEG are associated with this layer [source:ComputerNetworks-CompleteNotes.pdf | chunk:6]. The Session Layer (Layer 5) establishes, manages, and terminates communication sessions between devices. Key functions include session establishment/maintenance/termination, synchronization, and dialog control",
+          "key_concepts": [
+            "Application Layer",
+            "Presentation Layer",
+            "Session Layer",
+            "HTTP/HTTPS",
+            "Email Protocols",
+            "Client-Server",
+            "Peer-to-Peer",
+            "Content Delivery Network"
+          ],
+          "topic_wise_notes": [
+            {
+              "topic": "Application Layer Overview and Functions",
+              "notes": "The Application Layer (Layer 7) is the highest OSI layer, closest to the end user, providing network services to applications. Its functions include data representation (e.g., ASCII, HTML), network service access for apps like email and FTP, defining application protocols, and session management [source:ComputerNetworks-CompleteNotes.pdf | chunk:25]."
+            },
+            {
+              "topic": "Presentation Layer Functions and Protocols",
+              "notes": "The Presentation Layer (Layer 6) acts as a translation layer for data formatting and manipulation. Its functions include translation (e.g., ASCII to EBCDIC), encryption/decryption, and compression. Key protocols and standards include TLS/SSL, JPEG, MPEG, GIF, and MIME [source:ComputerNetworks-CompleteNotes.pdf | chunk:6]."
+            },
+            {
+              "topic": "Session Layer Functions and Protocols",
+              "notes": "The Session Layer (Layer 5) is responsible for establishing, managing, and terminating sessions between two devices. Its functions include session establishment/maintenance/termination, synchronization (using checkpoints), and dialog control (half-duplex/full-duplex). Protocols include NetBIOS, RPC, and PPTP [source:ComputerNetworks-CompleteNotes.pdf | chunk:6]."
+            },
+            {
+              "topic": "Key Application Layer Protocols",
+              "notes": "Not available in uploaded material"
+            },
+            {
+              "topic": "Client-Server vs. Peer-to-Peer Architectures",
+              "notes": "Client-Server architecture is centralized with easier management and better security, exemplified by web and email. Peer-to-Peer is decentralized, with each peer adding capacity, but management is harder and security weaker, seen in BitTorrent and Skype [source:ComputerNetworks-CompleteNotes.pdf | chunk:28]."
+            },
+            {
+              "topic": "Content Delivery Network (CDN)",
+              "notes": "A CDN is a geographically distributed network of proxy servers that cache and deliver content from the nearest edge server to the user. This reduces latency, improves load times, and helps handle traffic spikes. Examples include Cloudflare and Akamai [source:ComputerNetworks-CompleteNotes.pdf | chunk:28]."
+            }
+          ],
+          "flashcards": [
+            {
+              "question": "What is the primary role of the Application Layer?",
+              "answer": "The Application Layer (Layer 7) is the highest OSI layer, closest to the end user. It provides network services directly to user applications, enabling them to interact with the network for tasks like email, file transfer, and web browsing [source:ComputerNetworks-CompleteNotes.pdf | chunk:25]."
+            },
+            {
+              "question": "Name three functions of the Presentation Layer.",
+              "answer": "The Presentation Layer (Layer 6) performs translation (e.g., ASCII to EBCDIC), encryption/decryption, and compression. These functions ensure that data is formatted and manipulated appropriately for network transmission and presentation to the application layer [source:ComputerNetworks-CompleteNotes.pdf | chunk:6]."
+            },
+            {
+              "question": "What is the purpose of DNS?",
+              "answer": "DNS (Domain Name System) translates human-readable domain names, such as www.example.com, into numerical IP addresses that computers use to identify each other on a network. It operates on Port 53 and uses a hierarchical name space [source:ComputerNetworks-CompleteNotes.pdf | chunk:25]."
+            },
+            {
+              "question": "How does HTTPS differ from HTTP?",
+              "answer": "HTTPS is the secure version of HTTP. While HTTP uses Port 80 for stateless web communication, HTTPS uses Port 443 and incorporates TLS/SSL encryption to ensure secure, encrypted communication over the web, protecting data in transit [source:ComputerNetworks-CompleteNotes.pdf | chunk:26]."
+            },
+            {
+              "question": "What are the two connections used by FTP?",
+              "answer": "FTP (File Transfer Protocol) uses two connections: a control connection on Port 21 for commands and responses, and a data connection on Port 20 for the actual file transfer. The data connection can operate in active or passive modes [source:ComputerNetworks-CompleteNotes.pdf | chunk:26]."
+            },
+            {
+              "question": "What is a Content Delivery Network (CDN)?",
+              "answer": "A CDN is a geographically distributed network of proxy servers that cache and deliver content like web pages and videos from the nearest edge server to the user. This helps reduce latency, improve load times, and manage traffic spikes [source:ComputerNetworks-CompleteNotes.pdf | chunk:28]."
+            }
+          ],
+          "qa_sets": [
+            {
+              "question": "Describe the main functions of the Application Layer.",
+              "answer": "The Application Layer's main functions include data representation, converting user data into standard network-compatible formats; network service access, allowing applications to interact with the network; defining application protocols for message formatting; and session management, establishing, managing, and terminating communication sessions [source:ComputerNetworks-CompleteNotes.pdf | chunk:25]."
+            },
+            {
+              "question": "Explain the role of the Session Layer in network communication.",
+              "answer": "The Session Layer (Layer 5) is crucial for establishing, managing, and terminating communication sessions between two devices. Its functions include session establishment, maintenance, and termination, synchronization through checkpoints, and dialog control, which determines if communication is half-duplex or full-duplex [source:ComputerNetworks-CompleteNotes.pdf | chunk:6]."
+            },
+            {
+              "question": "What are the different types of DNS query types?",
+              "answer": "The Application Layer (Layer 7) is the highest OSI layer, closest to the end user. It provides network services directly to user applications, enabling them to interact with the network for tasks like email, file transfer, and web browsing [source:ComputerNetworks-CompleteNotes.pdf | chunk:25]."
+            },
+            {
+              "question": "Compare and contrast POP3 and IMAP email protocols.",
+              "answer": "POP3 (Post Office Protocol v3) downloads emails to the client and typically deletes them from the server, allowing offline access. IMAP (Internet Message Access Protocol) syncs emails on the server, allowing access from multiple devices and keeping emails on the server [source:ComputerNetworks-CompleteNotes.pdf | chunk:26]."
+            },
+            {
+              "question": "What are the advantages of using a Content Delivery Network (CDN)?",
+              "answer": "CDNs offer several advantages, including reduced latency by serving content from geographically closer servers, improved load times for users, and enhanced ability to handle traffic spikes by distributing the load across multiple servers. This improves overall user experience and network efficiency [source:ComputerNetworks-CompleteNotes.pdf | chunk:28]."
+            }
+          ],
+          "viva_questions": [
+            "Discuss the relationship between the Application, Presentation, and Session layers in the OSI model and how they are handled in the TCP/IP model.",
+            "Explain the significance of encryption/decryption and compression at the Presentation Layer.",
+            "How do Client-Server and Peer-to-Peer architectures differ in terms of scalability and security?",
+            "Describe the process of how a DNS query resolves a domain name to an IP address.",
+            "What are the key differences between active and passive modes in FTP?",
+            "Elaborate on the functions of the Application Layer and provide examples of protocols associated with each function.",
+            "Why is session management important, and what mechanisms does the Session Layer use for it?",
+            "How does a Content Delivery Network (CDN) improve web performance and reliability?"
+          ],
+          "difficulty_explanations": [
+            {
+              "mode": "beginner",
+              "explanation": "The Application Layer (Layer 7) is the highest OSI layer, providing network services directly to user applications. It combines Session, Presentation, and Application layers in the TCP/IP model [source:ComputerNetworks-CompleteNotes.pdf | chunk:25]. Its functions include data representation, network service access, application protocols, and session management"
+            },
+            {
+              "mode": "intermediate",
+              "explanation": "The Application Layer (Layer 7) is the highest OSI layer, closest to the end user, providing network services to applications. Its functions include data representation (e.g., ASCII, HTML), network service access for apps like email and FTP, defining application protocols, and session management [source:ComputerNetworks-CompleteNotes.pdf | chunk:25]. The Presentation Layer (Layer 6) acts as a translation layer for data formatting and manipulation. Its functions include"
+            },
+            {
+              "mode": "advanced",
+              "explanation": "The Application Layer (Layer 7) is the highest OSI layer, closest to the end user, providing network services to applications. Its functions include data representation (e.g., ASCII, HTML), network service access for apps like email and FTP, defining application protocols, and session management [source:ComputerNetworks-CompleteNotes.pdf | chunk:25]. The Presentation Layer (Layer 6) acts as a translation layer for data formatting and manipulation. Its functions include translation (e.g., ASCII to EBCDIC), encryption/decryption, and compression. Key"
+            }
+          ],
+          "source_documents": [
+            "ComputerNetworks-CompleteNotes.pdf"
+          ],
+          "generated_at": "2026-04-23T18:21:49.358660"
+        },
+        "created_at": "2026-04-23T18:21:24.208141",
+        "updated_at": "2026-04-23T18:21:49.380210"
+      },
+      "analysis": {
+        "source_documents": [
+          "ComputerNetworks-CompleteNotes.pdf"
+        ],
+        "required_field_count": 21,
+        "required_with_citation": 20,
+        "citation_coverage": 95.24,
+        "required_not_available": 1,
+        "required_not_available_ratio": 4.76,
+        "invalid_source_citations": 0,
+        "total_citations": 23,
+        "missing_citation_fields": [],
+        "not_available_fields": [
+          "topic_wise_notes[4].notes"
+        ],
+        "fallback_phrase_present": false,
+        "summary_char_count": 956,
+        "summary_long_token_count": 5,
+        "section_counts": {
+          "key_concepts": 8,
+          "topic_wise_notes": 6,
+          "flashcards": 6,
+          "qa_sets": 5,
+          "viva_questions": 8,
+          "difficulty_explanations": 3
+        },
+        "summary_preview": "The Application Layer (Layer 7) is the highest OSI layer, providing network services directly to user applications. It combines Session, Presentation, and Application layers in the TCP/IP model [source:ComputerNetworks-CompleteNotes.pdf | chunk:25]. Its functions include data representation, network service access, application protocols, and session management [source:ComputerN"
+      }
+    },
+    {
+      "pdf": "DSA Interview Revision - Complete Notes.pdf",
+      "path": "D:\\Hackathon\\AI CP 2\\Input\\DSA Interview Revision - Complete Notes.pdf",
+      "job_id": "5aa5dd4c402f4a6bbce60cbe9c1cb0e9",
+      "session_id": "e11f02ffe0784e25b4ea6e15a85afc55",
+      "duration_seconds": 27.86,
+      "timeline": [
+        {
+          "elapsed_seconds": 0.21,
+          "status": "processing",
+          "stage": "extracting",
+          "progress": 10,
+          "message": "Extracting text from uploaded documents."
+        },
+        {
+          "elapsed_seconds": 2.72,
+          "status": "processing",
+          "stage": "generating",
+          "progress": 85,
+          "message": "Generating structured study material with Gemini."
+        },
+        {
+          "elapsed_seconds": 27.86,
+          "status": "completed",
+          "stage": "completed",
+          "progress": 100,
+          "message": "Study guide generation finished."
+        }
+      ],
+      "final_status": "completed",
+      "final_stage": "completed",
+      "error": null,
+      "raw_job_payload": {
+        "job_id": "5aa5dd4c402f4a6bbce60cbe9c1cb0e9",
+        "session_id": "e11f02ffe0784e25b4ea6e15a85afc55",
+        "status": "completed",
+        "progress": 100,
+        "stage": "completed",
+        "message": "Study guide generation finished.",
+        "error": null,
+        "result": {
+          "summary_notes": "This document provides a comprehensive revision guide for Data Structures and Algorithms (DSA) interviews, covering essential topics from LeetCode Top Interview 150, Blind 75, and Strivers SDE Sheet, with C++ code examples [source:DSAInterviewRevision-CompleteNotes.pdf | chunk:0]. It details various data structures and algorithms, including Arrays, Hashing, Linked Lists, Trees, Heaps, Tries, Graphs, Dynamic Programming, and Backtracking [source:DSAInterviewRevision-CompleteNotes.pdf | chunk:0]. Key data structures discussed include Arrays, which offer O(1) index access but O(n) for insert/delete, and Hash Maps, providing O(1) average lookup/insert for tasks like frequency counting [source:DSAInterviewRevision-CompleteNotes.pdf | chunk:0]. Tries are highlighted for string-related operations such as autocomplete and prefix matching, with O(L) complexity for insertion and search [source:DSAInterviewRevision-CompleteNotes.pdf | chunk:22]. The guide also touches upon",
+          "key_concepts": [
+            "Arrays Hashing [source:DSAInterviewRevision-CompleteNotes.pdf | chunk:0]",
+            "Tries (prefix tree) [source:DSAInterviewRevision-CompleteNotes.pdf | chunk:22]",
+            "Heaps / Priority Queues [source:DSAInterviewRevision-CompleteNotes.pdf | chunk:0]",
+            "Backtracking Recursion [source:DSAInterviewRevision-CompleteNotes.pdf | chunk:0]",
+            "Dynamic Programming [source:DSAInterviewRevision-CompleteNotes.pdf | chunk:0]",
+            "Sliding Window [source:DSAInterviewRevision-CompleteNotes.pdf | chunk:0]",
+            "Shortest Path Algorithms [source:DSAInterviewRevision-CompleteNotes.pdf | chunk:42]",
+            "Topological Sort [source:DSAInterviewRevision-CompleteNotes.pdf | chunk:42]",
+            "Monotonic Stack [source:DSAInterviewRevision-CompleteNotes.pdf | chunk:42]",
+            "LRU Cache Design [source:DSAInterviewRevision-CompleteNotes.pdf | chunk:42]"
+          ],
+          "topic_wise_notes": [
+            {
+              "topic": "Arrays and Hashing",
+              "notes": "Arrays provide O(1) index access but O(n) for insertion/deletion. Hash Maps (unordered_map) offer O(1) average lookup/insert, useful for frequency counting and two-sum style problems [source:DSAInterviewRevision-CompleteNotes.pdf | chunk:0]."
+            },
+            {
+              "topic": "Tries (Prefix Trees)",
+              "notes": "Tries store strings character by character, with each node having children and an `isEnd` flag. They enable O(L) insert/search (L = word length) for autocomplete, prefix matching, and word search [source:DSAInterviewRevision-CompleteNotes.pdf | chunk:22]."
+            },
+            {
+              "topic": "Heaps / Priority Queues",
+              "notes": "Heaps are used for problems like 'Top K Frequent Words'. This involves counting frequencies, then using a min-heap of size k with a custom comparator for lexicographic tie-breaking [source:DSAInterviewRevision-CompleteNotes.pdf | chunk:22]."
+            },
+            {
+              "topic": "Shortest Path Algorithms",
+              "notes": "For unweighted graphs, BFS (level-order) finds the shortest path. For weighted graphs, Dijkstra's or Bellman-Ford algorithms are used to determine the shortest path [source:DSAInterviewRevision-CompleteNotes.pdf | chunk:42]."
+            },
+            {
+              "topic": "Design Problems",
+              "notes": "Designing for O(1) random access can use HashMap and Vector. An O(1) cache with eviction, like an LRU Cache, is implemented using a HashMap and a Doubly Linked List [source:DSAInterviewRevision-CompleteNotes.pdf | chunk:42]."
+            },
+            {
+              "topic": "String Matching",
+              "notes": "String matching and prefix problems can be addressed using techniques such as Sliding Window, Tries, and the Knuth-Morris-Pratt (KMP) algorithm [source:DSAInterviewRevision-CompleteNotes.pdf | chunk:42]."
+            }
+          ],
+          "flashcards": [
+            {
+              "question": "What is the primary use of a Trie data structure?",
+              "answer": "A Trie, or prefix tree, is primarily used for storing strings character by character to efficiently perform operations like autocomplete, prefix matching, and word search [source:DSAInterviewRevision-CompleteNotes.pdf | chunk:22]."
+            },
+            {
+              "question": "Not available in uploaded material",
+              "answer": "Arrays offer O(1) time complexity for index access. However, insertion and deletion operations generally have a time complexity of O(n) [source:DSAInterviewRevision-CompleteNotes.pdf | chunk:0]."
+            },
+            {
+              "question": "How do Hash Maps perform for lookup and insertion on average?",
+              "answer": "Hash Maps, such as `unordered_map` in C++, provide an average time complexity of O(1) for both lookup and insertion operations [source:DSAInterviewRevision-CompleteNotes.pdf | chunk:0]."
+            },
+            {
+              "question": "Which algorithms are suitable for finding the shortest path in weighted graphs?",
+              "answer": "For finding the shortest path in weighted graphs, Dijkstra's algorithm and Bellman-Ford algorithm are commonly used [source:DSAInterviewRevision-CompleteNotes.pdf | chunk:42]."
+            },
+            {
+              "question": "How can an O(1) cache with eviction be designed?",
+              "answer": "An O(1) cache with eviction, like an LRU Cache, can be designed by combining a HashMap with a Doubly Linked List [source:DSAInterviewRevision-CompleteNotes.pdf | chunk:42]."
+            },
+            {
+              "question": "What is the time complexity for inserting a word into a Trie?",
+              "answer": "Not available in uploaded material"
+            }
+          ],
+          "qa_sets": [
+            {
+              "question": "Not available in uploaded material",
+              "answer": "A Trie, or prefix tree, stores strings character by character. Each node has a `children` map (e.g., an array of 26 `TrieNode` pointers) and an `isEnd` boolean flag. Its purpose is to enable efficient operations like inserting, searching, and checking prefixes, with O(L) time complexity where L is the word length [source:DSAInterviewRevision-CompleteNotes.pdf | chunk:22]."
+            },
+            {
+              "question": "When would you typically use a Hash Map in C++?",
+              "answer": "A Hash Map (std::unordered_map in C++) is typically used for frequency counting, solving problems similar to the two-sum style, and grouping elements. It offers an average time complexity of O(1) for both lookup and insertion operations [source:DSAInterviewRevision-CompleteNotes.pdf | chunk:0]."
+            },
+            {
+              "question": "Describe the approach for solving 'Top K Frequent Words' using heaps.",
+              "answer": "To solve 'Top K Frequent Words', first count the frequencies of words using a HashMap. Then, use a min-heap of size k. A custom comparator is essential for tie-breaking, prioritizing lexicographical order when frequencies are equal [source:DSAInterviewRevision-CompleteNotes.pdf | chunk:22]."
+            },
+            {
+              "question": "What are the different algorithms for finding shortest paths in graphs?",
+              "answer": "For unweighted graphs, Breadth-First Search (BFS) is used to find the shortest path. For weighted graphs, Dijkstra's algorithm and the Bellman-Ford algorithm are employed to determine the shortest path [source:DSAInterviewRevision-CompleteNotes.pdf | chunk:42]."
+            },
+            {
+              "question": "How is a Trie implemented in C++?",
+              "answer": "A Trie is implemented with a `TrieNode` struct containing an array of `TrieNode` pointers (e.g., `children[26]`) and a `bool isEnd` flag. The `Trie` class manages a `root` node and provides `insert`, `search`, and `startsWith` methods, which internally use a `find` helper method [source:DSAInterviewRevision-CompleteNotes.pdf | chunk:22]."
+            }
+          ],
+          "viva_questions": [
+            "How would you implement the `find` method for a Trie to check for a prefix?",
+            "When is a min-heap preferred over a max-heap, especially in 'Top K' problems?",
+            "Can you explain the concept of a custom comparator for a heap in the context of tie-breaking?",
+            "What are the trade-offs between Dijkstra's and Bellman-Ford algorithms for shortest paths?",
+            "How do you handle lexicographical tie-breaking when using a min-heap for frequency-based problems?",
+            "What data structures are essential for designing an LRU Cache and why?"
+          ],
+          "difficulty_explanations": [
+            {
+              "mode": "beginner",
+              "explanation": "At a beginner level, understanding fundamental data structures like Arrays and Hash Maps is crucial. This includes knowing their basic operations, such as O(1) index access for arrays and O(1) average lookup/insert for hash maps, and when to use each [source:DSAInterviewRevision-CompleteNotes.pdf | chunk:0]."
+            },
+            {
+              "mode": "intermediate",
+              "explanation": "Intermediate difficulty involves implementing structures like Tries, which require understanding node design with children pointers and `isEnd` flags, and developing `insert`, `search`, and `startsWith` methods. Applying heaps with custom comparators for specific problem constraints, like lexicographical tie-breaking, is also key [source:DSAInterviewRevision-CompleteNotes.pdf | chunk:22]."
+            },
+            {
+              "mode": "advanced",
+              "explanation": "Advanced topics include designing complex systems such as an O(1) cache with eviction, like an LRU Cache. This requires integrating multiple data structures, specifically a HashMap and a Doubly Linked List, to achieve efficient constant-time operations for both access and eviction [source:DSAInterviewRevision-CompleteNotes.pdf | chunk:42]."
+            }
+          ],
+          "source_documents": [
+            "DSAInterviewRevision-CompleteNotes.pdf"
+          ],
+          "generated_at": "2026-04-23T18:22:16.223841"
+        },
+        "created_at": "2026-04-23T18:21:50.157074",
+        "updated_at": "2026-04-23T18:22:16.252493"
+      },
+      "analysis": {
+        "source_documents": [
+          "DSAInterviewRevision-CompleteNotes.pdf"
+        ],
+        "required_field_count": 21,
+        "required_with_citation": 20,
+        "citation_coverage": 95.24,
+        "required_not_available": 1,
+        "required_not_available_ratio": 4.76,
+        "invalid_source_citations": 0,
+        "total_citations": 23,
+        "missing_citation_fields": [],
+        "not_available_fields": [
+          "flashcards[6].answer"
+        ],
+        "fallback_phrase_present": false,
+        "summary_char_count": 976,
+        "summary_long_token_count": 4,
+        "section_counts": {
+          "key_concepts": 10,
+          "topic_wise_notes": 6,
+          "flashcards": 6,
+          "qa_sets": 5,
+          "viva_questions": 6,
+          "difficulty_explanations": 3
+        },
+        "summary_preview": "This document provides a comprehensive revision guide for Data Structures and Algorithms (DSA) interviews, covering essential topics from LeetCode Top Interview 150, Blind 75, and Strivers SDE Sheet, with C++ code examples [source:DSAInterviewRevision-CompleteNotes.pdf | chunk:0]. It details various data structures and algorithms, including Arrays, Hashing, Linked Lists, Trees,"
+      }
+    },
+    {
+      "pdf": "ECC.pdf",
+      "path": "D:\\Hackathon\\AI CP 2\\Input\\ECC.pdf",
+      "job_id": "2e4b91d10437447ba781e82e708ec63e",
+      "session_id": "cbf52ebdfc94422da9a3bced97b5f35e",
+      "duration_seconds": 17.83,
+      "timeline": [
+        {
+          "elapsed_seconds": 0.21,
+          "status": "processing",
+          "stage": "extracting",
+          "progress": 10,
+          "message": "Extracting text from uploaded documents."
+        },
+        {
+          "elapsed_seconds": 2.73,
+          "status": "processing",
+          "stage": "generating",
+          "progress": 85,
+          "message": "Generating structured study material with Gemini."
+        },
+        {
+          "elapsed_seconds": 17.83,
+          "status": "completed",
+          "stage": "completed",
+          "progress": 100,
+          "message": "Study guide generation finished."
+        }
+      ],
+      "final_status": "completed",
+      "final_stage": "completed",
+      "error": null,
+      "raw_job_payload": {
+        "job_id": "2e4b91d10437447ba781e82e708ec63e",
+        "session_id": "cbf52ebdfc94422da9a3bced97b5f35e",
+        "status": "completed",
+        "progress": 100,
+        "stage": "completed",
+        "message": "Study guide generation finished.",
+        "error": null,
+        "result": {
+          "summary_notes": "Elliptic Curve Cryptography (ECC) relies on the elliptic curve logarithm problem, which is considered a hard problem analogous to the discrete logarithm problem [source:ECC.pdf | chunk:12]. In ECC, given a scalar 'k' and a point 'P' on a prime curve, it is easy to compute 'Q' (where Q=kP). However, given 'Q' and 'P', it is computationally difficult to find 'k' [source:ECC.pdf | chunk:12]. The security of ECC is dependent on the difficulty of this elliptic curve logarithm problem, requiring 'k' to be sufficiently large [source:ECC.pdf | chunk:12]. Compared to other cryptographic methods like RSA, ECC can achieve similar security levels with much smaller key sizes, offering significant computational advantages [source:ECC.pdf | chunk:12].",
+          "key_concepts": [
+            "Elliptic Curve Cryptosystems",
+            "Elliptic curve logarithm problem",
+            "Scalar Multiplication",
+            "Point multiplication",
+            "Group operation",
+            "Finite field arithmetic",
+            "Binary Fields",
+            "Computational advantages"
+          ],
+          "topic_wise_notes": [
+            {
+              "topic": "Elliptic Curve Logarithm Problem",
+              "notes": "The security of ECC is based on the elliptic curve logarithm problem. This problem states that while it's easy to compute Q given k and P (Q=kP), it's hard to find k given Q and P. The scalar 'k' must be large enough for security [source:ECC.pdf | chunk:12]."
+            },
+            {
+              "topic": "ECC Security and Efficiency",
+              "notes": "ECC's security relies on the elliptic curve logarithm problem. It offers significant computational advantages over methods like RSA because it can use much smaller key sizes to achieve similar security levels [source:ECC.pdf | chunk:12]."
+            },
+            {
+              "topic": "Scalar Multiplication Techniques",
+              "notes": "Scalar multiplication (kP) is a core ECC operation. Techniques include LSB first vs MSB first methods, the Montgomery Technique, and fast scalar multiplication without pre-computation [source:ECC.pdf | chunk:12]."
+            },
+            {
+              "topic": "Reducing Inverters in ECC",
+              "notes": "Methods like Lopez and Dahab Projective Transformation are used to reduce the number of inverters required in ECC operations. Mixed Coordinates also play a role in optimizing these computations [source:ECC.pdf | chunk:12]."
+            },
+            {
+              "topic": "ECC Operations Hierarchy",
+              "notes": "ECC operations are structured hierarchically: Level 0 is ECC itself, Level 1 is point multiplication (kP), Level 2 involves group operations (point add/double), and Level 3 covers finite field arithmetic (multiplication, addition, subtraction, inversion) [source:ECC.pdf | chunk:12]."
+            },
+            {
+              "topic": "Parallelization in ECC",
+              "notes": "Parallelization techniques are applied to ECC architectures to enhance performance. This involves parallelizing operations at various levels, particularly in finite field arithmetic [source:ECC.pdf | chunk:12]."
+            }
+          ],
+          "flashcards": [
+            {
+              "question": "What is the fundamental hard problem ECC security relies on?",
+              "answer": "Not available in uploaded material"
+            },
+            {
+              "question": "How does ECC compare to RSA in terms of key size and computational advantages?",
+              "answer": "Compared to RSA, ECC can use much smaller key sizes for similar security levels. This characteristic provides ECC with significant computational advantages, making it more efficient for certain applications [source:ECC.pdf | chunk:12]."
+            },
+            {
+              "question": "Name two techniques for Scalar Multiplication in ECC.",
+              "answer": "Two techniques for Scalar Multiplication in ECC are LSB first vs MSB first methods and the Montgomery Technique. Another is Fast Scalar Multiplication without pre-computation [source:ECC.pdf | chunk:12]."
+            },
+            {
+              "question": "What is the purpose of Lopez and Dahab Projective Transformation?",
+              "answer": "The Lopez and Dahab Projective Transformation is a technique used in ECC to reduce the number of inverters required during computations, which can improve efficiency [source:ECC.pdf | chunk:12]."
+            },
+            {
+              "question": "What are the different levels in the ECC operations hierarchy?",
+              "answer": "The ECC operations hierarchy includes Level 0 (ECC), Level 1 (Point multiplication: kP), Level 2 (Group operation: point add/double), and Level 3 (Finite field arithmetic: multiplication, addition, subtraction, inversion) [source:ECC.pdf | chunk:12]."
+            }
+          ],
+          "qa_sets": [
+            {
+              "question": "Explain the elliptic curve logarithm problem.",
+              "answer": "The elliptic curve logarithm problem is the basis of ECC security. It states that given a point P and a scalar k, it's easy to compute Q=kP. However, given Q and P, it is computationally hard to determine the scalar k. The security depends on k being sufficiently large [source:ECC.pdf | chunk:12]."
+            },
+            {
+              "question": "What are the main advantages of ECC over other cryptographic systems like RSA?",
+              "answer": "ECC offers significant computational advantages over systems like RSA because it can achieve similar levels of security with much smaller key sizes. This leads to more efficient operations and reduced resource consumption [source:ECC.pdf | chunk:12]."
+            },
+            {
+              "question": "List some sub-topics related to the implementation of ECC in Binary Fields.",
+              "answer": "Sub-topics include Scalar Multiplication (LSB first vs MSB first), Montgomery Technique of Scalar Multiplication, Fast Scalar Multiplication without pre-computation, Lopez and Dahab Projective Transformation, Mixed Coordinates, Parallelization Techniques, and Half and Add Technique for Scalar Multiplication [source:ECC.pdf | chunk:12]."
+            },
+            {
+              "question": "Describe the highest level of operations in the ECC hierarchy.",
+              "answer": "The highest level (Level 3) in the ECC operations hierarchy involves finite field arithmetic. This includes fundamental operations such as multiplication, addition, subtraction, and inversion, which are essential for point operations [source:ECC.pdf | chunk:12]."
+            }
+          ],
+          "viva_questions": [
+            "What is the core mathematical problem underpinning ECC security?",
+            "How does the key size of ECC compare to RSA for equivalent security?",
+            "Can you explain the concept of scalar multiplication in ECC?",
+            "What role do finite field arithmetic operations play in ECC?",
+            "Name a technique used to reduce the number of inverters in ECC implementations.",
+            "What are the different approaches to scalar multiplication?",
+            "How can parallelization improve ECC performance?",
+            "What is the significance of 'k' being large enough in ECC?"
+          ],
+          "difficulty_explanations": [
+            {
+              "mode": "beginner",
+              "explanation": "For beginners, ECC can be understood as a cryptographic system where security comes from the difficulty of finding a secret number 'k' when you only know the starting point 'P' and the end point 'Q' on a special curve (Q=kP) [source:ECC.pdf | chunk:12]."
+            },
+            {
+              "mode": "intermediate",
+              "explanation": "Intermediate learners should grasp that ECC's strength lies in the elliptic curve logarithm problem, which is computationally hard. This allows ECC to use smaller key sizes than RSA for comparable security, leading to efficiency benefits [source:ECC.pdf | chunk:12]."
+            },
+            {
+              "mode": "advanced",
+              "explanation": "Advanced understanding involves the detailed implementation aspects, such as various scalar multiplication techniques (e.g., Montgomery, LSB/MSB first), methods to reduce inverters (e.g., Lopez and Dahab Projective Transformation), and the hierarchical structure of ECC operations from point multiplication down to finite field arithmetic [source:ECC.pdf | chunk:12]."
+            }
+          ],
+          "source_documents": [
+            "ECC.pdf"
+          ],
+          "generated_at": "2026-04-23T18:22:34.961479"
+        },
+        "created_at": "2026-04-23T18:22:18.029864",
+        "updated_at": "2026-04-23T18:22:34.979918"
+      },
+      "analysis": {
+        "source_documents": [
+          "ECC.pdf"
+        ],
+        "required_field_count": 19,
+        "required_with_citation": 18,
+        "citation_coverage": 94.74,
+        "required_not_available": 1,
+        "required_not_available_ratio": 5.26,
+        "invalid_source_citations": 0,
+        "total_citations": 21,
+        "missing_citation_fields": [],
+        "not_available_fields": [
+          "flashcards[1].answer"
+        ],
+        "fallback_phrase_present": false,
+        "summary_char_count": 746,
+        "summary_long_token_count": 0,
+        "section_counts": {
+          "key_concepts": 8,
+          "topic_wise_notes": 6,
+          "flashcards": 5,
+          "qa_sets": 4,
+          "viva_questions": 8,
+          "difficulty_explanations": 3
+        },
+        "summary_preview": "Elliptic Curve Cryptography (ECC) relies on the elliptic curve logarithm problem, which is considered a hard problem analogous to the discrete logarithm problem [source:ECC.pdf | chunk:12]. In ECC, given a scalar 'k' and a point 'P' on a prime curve, it is easy to compute 'Q' (where Q=kP). However, given 'Q' and 'P', it is computationally difficult to find 'k' [source:ECC.pdf |"
+      }
+    },
+    {
+      "pdf": "Operating Systems - Complete Notes.pdf",
+      "path": "D:\\Hackathon\\AI CP 2\\Input\\Operating Systems - Complete Notes.pdf",
+      "job_id": "19b9e38a92c748c49d1f8f6eaa6260cf",
+      "session_id": "26542b5a507d4331be86884dbcc750e7",
+      "duration_seconds": 25.44,
+      "timeline": [
+        {
+          "elapsed_seconds": 0.28,
+          "status": "processing",
+          "stage": "extracting",
+          "progress": 10,
+          "message": "Extracting text from uploaded documents."
+        },
+        {
+          "elapsed_seconds": 2.78,
+          "status": "processing",
+          "stage": "generating",
+          "progress": 85,
+          "message": "Generating structured study material with Gemini."
+        },
+        {
+          "elapsed_seconds": 25.44,
+          "status": "completed",
+          "stage": "completed",
+          "progress": 100,
+          "message": "Study guide generation finished."
+        }
+      ],
+      "final_status": "completed",
+      "final_stage": "completed",
+      "error": null,
+      "raw_job_payload": {
+        "job_id": "19b9e38a92c748c49d1f8f6eaa6260cf",
+        "session_id": "26542b5a507d4331be86884dbcc750e7",
+        "status": "completed",
+        "progress": 100,
+        "stage": "completed",
+        "message": "Study guide generation finished.",
+        "error": null,
+        "result": {
+          "summary_notes": "An Operating System (OS) is software that acts as an intermediary between computer hardware and the user, managing resources like CPU, memory, and files. It provides an interface and performs core functions such as process, memory, and file management [source:OperatingSystems-CompleteNotes.pdf | chunk:0]. Primary goals include user convenience, program Common methods include Contiguous (files in consecutive blocks, fast access but external fragmentation), Linked (each block points to the next, no external fragmentation but slow random access), and Indexed (index block holds all pointers, direct access, no external fragmentation but index block overhead) Directory structures vary: Single-Level (all files in one directory, naming conflicts), Two-Level (separate directory per user), Tree-Structured (hierarchical, subdirectories), Acyclic Graph (allows file/directory sharing via links), and General Graph (allows cycles, requires garbage collection)",
+          "key_concepts": [
+            "Operating System (OS)",
+            "File System",
+            "Absolute Path",
+            "Relative Path",
+            "Contiguous Allocation",
+            "Linked Allocation",
+            "Indexed Allocation",
+            "Sequential Access",
+            "Direct Access",
+            "HDD Components"
+          ],
+          "topic_wise_notes": [
+            {
+              "topic": "Operating System Basics",
+              "notes": "An Operating System (OS) is software that acts as an intermediary between computer hardware and the user, managing resources like CPU, memory, and files. It provides an interface and performs core functions such as process, memory, and file management [source:OperatingSystems-CompleteNotes.pdf | chunk:0]. Primary goals include user convenience, program execution, resource management, and security [source:OperatingSystems-CompleteNotes.pdf | chunk:1]."
+            },
+            {
+              "topic": "File Systems",
+              "notes": "Not available in uploaded material"
+            },
+            {
+              "topic": "File Allocation Methods",
+              "notes": "Common methods include Contiguous (files in consecutive blocks, fast access but external fragmentation), Linked (each block points to the next, no external fragmentation but slow random access), and Indexed (index block holds all pointers, direct access, no external fragmentation but index block overhead) [source:OperatingSystems-CompleteNotes.pdf | chunk:39]."
+            },
+            {
+              "topic": "Directory Structures",
+              "notes": "Directory structures vary: Single-Level (all files in one directory, naming conflicts), Two-Level (separate directory per user), Tree-Structured (hierarchical, subdirectories), Acyclic Graph (allows file/directory sharing via links), and General Graph (allows cycles, requires garbage collection) [source:OperatingSystems-CompleteNotes.pdf | chunk:39]."
+            },
+            {
+              "topic": "File Access Methods",
+              "notes": "File access methods include Sequential Access (data read/written one record after another, like a tape), Direct (Random) Access (data accessed directly by block number), and Indexed Sequential (uses an index to speed up sequential access) [source:OperatingSystems-CompleteNotes.pdf | chunk:39]."
+            },
+            {
+              "topic": "Secondary Memory (HDD) Components",
+              "notes": "Hard Disk Drive (HDD) components include Platters (circular disks with magnetic material), Tracks (concentric circles on the platter surface), and Sectors (divisions of a track, representing the smallest addressable unit) [source:OperatingSystems-CompleteNotes.pdf | chunk:39]."
+            }
+          ],
+          "flashcards": [
+            {
+              "question": "What is the primary function of an Operating System?",
+              "answer": "An Operating System (OS) acts as an intermediary between computer hardware and the user. It manages hardware and software resources, such as CPU, memory, and files, and provides an interface for user interaction [source:OperatingSystems-CompleteNotes.pdf | chunk:0]."
+            },
+            {
+              "question": "Name two primary goals of an Operating System.",
+              "answer": "Two primary goals of an Operating System are user convenience, by providing a user-friendly interface, and resource management, by allocating CPU, memory, disk storage, and I/O devices for fair utilization [source:OperatingSystems-CompleteNotes.pdf | chunk:1]."
+            },
+            {
+              "question": "What is the difference between an absolute path and a relative path?",
+              "answer": "Not available in uploaded material"
+            },
+            {
+              "question": "What are the advantages and disadvantages of Contiguous File Allocation?",
+              "answer": "Contiguous file allocation places files in consecutive blocks, offering fast sequential and direct access. However, its disadvantages include external fragmentation and the requirement for the file size to be known beforehand [source:OperatingSystems-CompleteNotes.pdf | chunk:39]."
+            },
+            {
+              "question": "Which file system is commonly used by Windows and what are its features?",
+              "answer": "NTFS is commonly used by Windows. Its features include journaling, permissions, and support for large files, making it robust for modern operating environments [source:OperatingSystems-CompleteNotes.pdf | chunk:37]."
+            },
+            {
+              "question": "Describe the components of a Hard Disk Drive (HDD).",
+              "answer": "An HDD consists of Platters (circular disks coated with magnetic material), Tracks (concentric circles on the platter surface), and Sectors (divisions of a track, which are the smallest addressable units) [source:OperatingSystems-CompleteNotes.pdf | chunk:39]."
+            }
+          ],
+          "qa_sets": [
+            {
+              "question": "Explain the role of an Operating System and list its primary goals.",
+              "answer": "An Operating System (OS) acts as an intermediary between computer hardware and the user. It manages hardware and software resources, such as CPU, memory, and files, and provides an interface for user interaction [source:OperatingSystems-CompleteNotes.pdf | chunk:0]."
+            },
+            {
+              "question": "Compare the features of FAT32, NTFS, and ext4 file systems.",
+              "answer": "Two primary goals of an Operating System are user convenience, by providing a user-friendly interface, and resource management, by allocating CPU, memory, disk storage, and I/O devices for fair utilization [source:OperatingSystems-CompleteNotes.pdf | chunk:1]."
+            },
+            {
+              "question": "Describe the Linked File Allocation method, including its advantages and disadvantages.",
+              "answer": "In Linked File Allocation, each block of a file contains a pointer to the next block. Its main advantage is that it eliminates external fragmentation. However, its disadvantages include slow random access due to sequential traversal and the overhead of storing pointers within each block [source:OperatingSystems-CompleteNotes.pdf | chunk:39]."
+            },
+            {
+              "question": "What are the different types of directory structures?",
+              "answer": "Directory structures include Single-Level (all files in one directory), Two-Level (separate directory for each user), Tree-Structured (hierarchical with subdirectories), Acyclic Graph (allows sharing via links), and General Graph (allows cycles, requiring garbage collection) [source:OperatingSystems-CompleteNotes.pdf | chunk:39]."
+            },
+            {
+              "question": "How do Sequential Access and Direct Access methods differ?",
+              "answer": "Sequential Access involves reading or writing data records one after another, similar to a tape drive. Direct (Random) Access allows data to be accessed directly by its block number, providing faster retrieval for specific data points [source:OperatingSystems-CompleteNotes.pdf | chunk:39]."
+            }
+          ],
+          "viva_questions": [
+            "What are the fundamental responsibilities of an Operating System?",
+            "Discuss the trade-offs between different file allocation methods.",
+            "Explain the concept of a file system and provide examples of its features.",
+            "How do absolute and relative paths function within a file system hierarchy?",
+            "Describe the various directory structures and their suitability for different environments.",
+            "What are the key components of a Hard Disk Drive (HDD) and their roles?",
+            "Compare the goals of an Operating System, distinguishing between primary and secondary objectives.",
+            "How does the Unix File System structure differ from other common file systems?"
+          ],
+          "difficulty_explanations": [
+            {
+              "mode": "beginner",
+              "explanation": "An Operating System (OS) is software that acts as an intermediary between computer hardware and the user, managing resources like CPU, memory, and files. It provides an interface and performs core functions such as process, memory, and file management [source:OperatingSystems-CompleteNotes.pdf | chunk:0]. Primary goals include user convenience, program Common methods include"
+            },
+            {
+              "mode": "intermediate",
+              "explanation": "Intermediate difficulty involves a deeper understanding of file allocation methods (contiguous, linked, indexed), including their advantages and disadvantages. It also requires knowledge of different directory structures such as single-level, two-level, and tree-structured systems [source:OperatingSystems-CompleteNotes.pdf | chunk:39]."
+            },
+            {
+              "mode": "advanced",
+              "explanation": "An Operating System (OS) is software that acts as an intermediary between computer hardware and the user, managing resources like CPU, memory, and files. It provides an interface and performs core functions such as process, memory, and file management [source:OperatingSystems-CompleteNotes.pdf | chunk:0]. Primary goals include user convenience, program Common methods include Contiguous (files in consecutive blocks, fast access but external fragmentation), Linked (each block points to the next, no external fragmentation but slow random access), and"
+            }
+          ],
+          "source_documents": [
+            "OperatingSystems-CompleteNotes.pdf"
+          ],
+          "generated_at": "2026-04-23T18:23:00.076613"
+        },
+        "created_at": "2026-04-23T18:22:35.884556",
+        "updated_at": "2026-04-23T18:23:00.105843"
+      },
+      "analysis": {
+        "source_documents": [
+          "OperatingSystems-CompleteNotes.pdf"
+        ],
+        "required_field_count": 21,
+        "required_with_citation": 19,
+        "citation_coverage": 90.48,
+        "required_not_available": 2,
+        "required_not_available_ratio": 9.52,
+        "invalid_source_citations": 0,
+        "total_citations": 20,
+        "missing_citation_fields": [],
+        "not_available_fields": [
+          "topic_wise_notes[2].notes",
+          "flashcards[3].answer"
+        ],
+        "fallback_phrase_present": false,
+        "summary_char_count": 958,
+        "summary_long_token_count": 1,
+        "section_counts": {
+          "key_concepts": 10,
+          "topic_wise_notes": 6,
+          "flashcards": 6,
+          "qa_sets": 5,
+          "viva_questions": 8,
+          "difficulty_explanations": 3
+        },
+        "summary_preview": "An Operating System (OS) is software that acts as an intermediary between computer hardware and the user, managing resources like CPU, memory, and files. It provides an interface and performs core functions such as process, memory, and file management [source:OperatingSystems-CompleteNotes.pdf | chunk:0]. Primary goals include user convenience, program Common methods include Co"
+      }
+    },
+    {
+      "pdf": "secure-hash-algorithm-versions.pdf",
+      "path": "D:\\Hackathon\\AI CP 2\\Input\\secure-hash-algorithm-versions.pdf",
+      "job_id": "f5c16451371444a88fc28081e8de135b",
+      "session_id": "72b76a09eda84d52937b91ed72f60dca",
+      "duration_seconds": 20.3,
+      "timeline": [
+        {
+          "elapsed_seconds": 0.23,
+          "status": "processing",
+          "stage": "extracting",
+          "progress": 10,
+          "message": "Extracting text from uploaded documents."
+        },
+        {
+          "elapsed_seconds": 2.74,
+          "status": "processing",
+          "stage": "generating",
+          "progress": 85,
+          "message": "Generating structured study material with Gemini."
+        },
+        {
+          "elapsed_seconds": 20.3,
+          "status": "completed",
+          "stage": "completed",
+          "progress": 100,
+          "message": "Study guide generation finished."
+        }
+      ],
+      "final_status": "completed",
+      "final_stage": "completed",
+      "error": null,
+      "raw_job_payload": {
+        "job_id": "f5c16451371444a88fc28081e8de135b",
+        "session_id": "72b76a09eda84d52937b91ed72f60dca",
+        "status": "completed",
+        "progress": 100,
+        "stage": "completed",
+        "message": "Study guide generation finished.",
+        "error": null,
+        "result": {
+          "summary_notes": "The Secure Hash Algorithm (SHA) was initially designed by NIST NSA in 1993 and revised in 1995 as SHA-1, becoming a US standard for use with the DSA signature scheme (FIPS 180-1 1995) [source:secure-hash-algorithm-versions.pdf | chunk:0]. SHA-1 produces 160-bit hash values and is based on the design of MD5, though recent security concerns have been raised about its future use [source:secure-hash-algorithm-versions.pdf | chunk:0]. SHA processes input text in 512-bit blocks, using 4 rounds with 20 iterations per round, and initializes a 5-word (160-bit) buffer [source:secure-hash-algorithm-versions.pdf | chunk:0]. The algorithm involves padding, appending a 64-bit length, dividing input into blocks, and then processing these blocks through a series of operations [source:secure-hash-algorithm-versions.pdf | chunk:0]. NIST issued a revision, FIPS 180-2, in 2002, adding SHA-256, SHA-384, and SHA-512, which offer different message digest lengths and are designed for",
+          "key_concepts": [
+            "Secure Hash Algorithm",
+            "SHA-1",
+            "NIST NSA",
+            "160-bit hash values",
+            "MD5 design",
+            "SHA-256",
+            "SHA-384",
+            "SHA-512"
+          ],
+          "topic_wise_notes": [
+            {
+              "topic": "SHA Origin and Revision",
+              "notes": "The Secure Hash Algorithm (SHA) was initially designed by NIST NSA in 1993 and later revised in 1995 as SHA-1. It became a US standard (FIPS 180-1 1995) for use with the DSA signature scheme. SHA-1 produces 160-bit hash values [source:secure-hash-algorithm-versions.pdf | chunk:0]."
+            },
+            {
+              "topic": "How SHA-1 Works",
+              "notes": "SHA-1 processes input text in 512-bit blocks, dividing them into 16 sub-blocks of 32 bits each. It uses 4 rounds, with each round consisting of 20 iteration operations. The algorithm involves padding, appending message length, and initializing a 5-word (160-bit) buffer [source:secure-hash-algorithm-versions.pdf | chunk:0]."
+            },
+            {
+              "topic": "SHA-1 Compression Function",
+              "notes": "Not available in uploaded material"
+            },
+            {
+              "topic": "SHA-1 vs. MD5",
+              "notes": "SHA-1 offers a harder brute-force attack resistance due to its 160-bit hash compared to MD5's 128 bits. SHA-1 is not vulnerable to known attacks like MD4/5, though it is slightly slower (80 vs. 64 steps). Both are designed to be simple and compact [source:secure-hash-algorithm-versions.pdf | chunk:2]."
+            },
+            {
+              "topic": "Revised Secure Hash Standard (SHA-2)",
+              "notes": "NIST issued FIPS 180-2 in 2002, introducing SHA-256, SHA-384, and SHA-512. These versions provide different message digest lengths and are designed for compatibility with the AES cipher. Their structure is similar to SHA-1, but they offer higher security levels [source:secure-hash-algorithm-versions.pdf | chunk:2]."
+            }
+          ],
+          "flashcards": [
+            {
+              "question": "When was the Secure Hash Algorithm (SHA) originally designed and revised?",
+              "answer": "SHA was originally designed by NIST NSA in 1993 and subsequently revised in 1995 as SHA-1 [source:secure-hash-algorithm-versions.pdf | chunk:0]."
+            },
+            {
+              "question": "What is the digest length produced by SHA-1?",
+              "answer": "Not available in uploaded material"
+            },
+            {
+              "question": "How many rounds and iterations per round does SHA-1 use?",
+              "answer": "Not available in uploaded material"
+            },
+            {
+              "question": "What are the three additional versions of SHA introduced in FIPS 180-2?",
+              "answer": "NIST's FIPS 180-2, issued in 2002, added three new versions: SHA-256, SHA-384, and SHA-512. These versions offer different message digest lengths and enhanced security [source:secure-hash-algorithm-versions.pdf | chunk:2]."
+            },
+            {
+              "question": "What is the primary difference in brute force attack resistance between SHA-1 and MD5?",
+              "answer": "Brute force attacks are harder against SHA-1 because it produces 160-bit hash values, whereas MD5 produces 128-bit hash values. This larger output size increases the computational effort required for such attacks [source:secure-hash-algorithm-versions.pdf | chunk:2]."
+            }
+          ],
+          "qa_sets": [
+            {
+              "question": "Describe the initial design and revision of the Secure Hash Algorithm.",
+              "answer": "The Secure Hash Algorithm (SHA) was initially designed by NIST NSA in 1993. It was later revised in 1995 and became known as SHA-1. This revision established it as a US standard (FIPS 180-1 1995) for use with the Digital Signature Algorithm (DSA) signature scheme [source:secure-hash-algorithm-versions.pdf | chunk:0]."
+            },
+            {
+              "question": "Explain the initial steps in how SHA processes an input message.",
+              "answer": "SHA begins by padding the message so its length is 64 bits short of a multiple of 512. Next, a 64-bit length value of the original message is appended. The input is then divided into 512-bit blocks, and a 5-word (160-bit) buffer (A,B,C,D,E) is initialized with specific hexadecimal values [source:secure-hash-algorithm-versions.pdf | chunk:0]."
+            },
+            {
+              "question": "What are the key components of the SHA-1 compression function in each round?",
+              "answer": "SHA was originally designed by NIST NSA in 1993 and subsequently revised in 1995 as SHA-1 [source:secure-hash-algorithm-versions.pdf | chunk:0]."
+            },
+            {
+              "question": "How do the nonlinear functions differ across the four rounds of SHA-1?",
+              "answer": "NIST's FIPS 180-2, issued in 2002, added three new versions: SHA-256, SHA-384, and SHA-512. These versions offer different message digest lengths and enhanced security [source:secure-hash-algorithm-versions.pdf | chunk:2]."
+            },
+            {
+              "question": "What are the main improvements or changes introduced with the Revised Secure Hash Standard (FIPS 180-2)?",
+              "answer": "FIPS 180-2, issued in 2002, added SHA-256, SHA-384, and SHA-512, which provide different message digest lengths. These versions were designed for compatibility with the increased security of the AES cipher. While their structure is similar to SHA-1, they offer higher security levels [source:secure-hash-algorithm-versions.pdf | chunk:2]."
+            }
+          ],
+          "viva_questions": [
+            "Discuss the historical development of the Secure Hash Algorithm, from its initial design to SHA-1.",
+            "Explain the step-by-step process of how SHA-1 generates a hash value from an input message.",
+            "Compare and contrast SHA-1 with MD5, highlighting their key differences in security and performance.",
+            "Describe the role of the chaining variables and the buffer in the SHA-1 algorithm.",
+            "Elaborate on the purpose and function of the nonlinear functions used in each round of SHA-1.",
+            "What prompted the revision of the Secure Hash Standard to include SHA-256, SHA-384, and SHA-512?",
+            "How does the creation of the 80-word input Wt contribute to the security of SHA-1?",
+            "Explain the concept of 'padding' and 'appending length' in the context of SHA algorithms."
+          ],
+          "difficulty_explanations": [
+            {
+              "mode": "beginner",
+              "explanation": "SHA is like a digital fingerprinting tool. It takes any message and creates a unique, fixed-size code (a hash). SHA-1 creates a 160-bit code. It was designed by NIST NSA and is used to ensure data hasn't been tampered with [source:secure-hash-algorithm-versions.pdf | chunk:0]."
+            },
+            {
+              "mode": "intermediate",
+              "explanation": "The Secure Hash Algorithm (SHA) was initially designed by NIST NSA in 1993 and later revised in 1995 as SHA-1. It became a US standard (FIPS 180-1 1995) for use with the DSA signature scheme. SHA-1 produces 160-bit hash values [source:secure-hash-algorithm-versions.pdf | chunk:0]. SHA-1 processes input text in 512-bit blocks, dividing them into 16 sub-blocks of 32 bits each. It uses 4 rounds, with each round consisting of 20 iteration operations. The algorithm involves"
+            },
+            {
+              "mode": "advanced",
+              "explanation": "The Secure Hash Algorithm (SHA) was initially designed by NIST NSA in 1993 and later revised in 1995 as SHA-1. It became a US standard (FIPS 180-1 1995) for use with the DSA signature scheme. SHA-1 produces 160-bit hash values [source:secure-hash-algorithm-versions.pdf | chunk:0]. SHA-1 processes input text in 512-bit blocks, dividing them into 16 sub-blocks of 32 bits each. It uses 4 rounds, with each round consisting of 20 iteration operations. The algorithm involves padding, appending message length, and initializing a 5-word (160-bit) buffer"
+            }
+          ],
+          "source_documents": [
+            "secure-hash-algorithm-versions.pdf"
+          ],
+          "generated_at": "2026-04-23T18:23:21.319893"
+        },
+        "created_at": "2026-04-23T18:23:01.360183",
+        "updated_at": "2026-04-23T18:23:21.344706"
+      },
+      "analysis": {
+        "source_documents": [
+          "secure-hash-algorithm-versions.pdf"
+        ],
+        "required_field_count": 19,
+        "required_with_citation": 16,
+        "citation_coverage": 84.21,
+        "required_not_available": 3,
+        "required_not_available_ratio": 15.79,
+        "invalid_source_citations": 0,
+        "total_citations": 19,
+        "missing_citation_fields": [],
+        "not_available_fields": [
+          "topic_wise_notes[3].notes",
+          "flashcards[2].answer",
+          "flashcards[3].answer"
+        ],
+        "fallback_phrase_present": false,
+        "summary_char_count": 974,
+        "summary_long_token_count": 4,
+        "section_counts": {
+          "key_concepts": 8,
+          "topic_wise_notes": 5,
+          "flashcards": 5,
+          "qa_sets": 5,
+          "viva_questions": 8,
+          "difficulty_explanations": 3
+        },
+        "summary_preview": "The Secure Hash Algorithm (SHA) was initially designed by NIST NSA in 1993 and revised in 1995 as SHA-1, becoming a US standard for use with the DSA signature scheme (FIPS 180-1 1995) [source:secure-hash-algorithm-versions.pdf | chunk:0]. SHA-1 produces 160-bit hash values and is based on the design of MD5, though recent security concerns have been raised about its future use ["
+      }
+    }
+  ]
+}

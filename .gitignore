@@ -1,0 +1,28 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.venv/
+venv/
+
+# Backend runtime artifacts
+backend/.env
+backend/uploads/*
+!backend/uploads/.gitkeep
+backend/vector_store/*
+!backend/vector_store/.gitkeep
+backend/study_guides.db
+
+# Frontend runtime artifacts
+frontend/.env
+frontend/node_modules/
+frontend/.next/
+frontend/out/
+
+# Generic secrets and local files
+.env
+kg-hackathon-*.json
+*.pem
+*.key
+*.log
