@@ -182,53 +182,21 @@ def _run_regeneration_job(
     container: ServiceContainer,
 ) -> None:
     try:
-        jobs.update_job(
-            job_id,
-            status="processing",
-            progress=50,
-            stage="retrieving",
-            message="Retrieving existing vector context.",
-        )
-
         history_item = container.history_service.get_session(session_id)
         source_documents = history_item.file_names if history_item else []
 
-        retrieval_k = container.settings.retrieval_k
-        if "unit_summaries" in options.output_types:
-            retrieval_k = max(retrieval_k, 10)
+        session_directory = container.settings.upload_path / session_id
+        saved_file_paths = [
+            session_directory / file_name
+            for file_name in source_documents
+            if (session_directory / file_name).exists()
+        ]
 
-        context = container.rag_service.get_context_bundle(
-            session_id=session_id,
-            queries=_build_queries(options),
-            k=retrieval_k,
-            max_chars=container.settings.context_max_chars,
-            allowed_sources=set(source_documents),
-        )
-        if not context.strip():
-            raise ValueError("No context found in the stored vector index for this session.")
+        if not saved_file_paths:
+            raise ValueError("No uploaded files found for this session.")
 
-        jobs.update_job(
-            job_id,
-            progress=80,
-            stage="generating",
-            message="Regenerating study material with Gemini.",
-        )
-
-        result = container.get_generation_service().generate_from_context(
-            context=context,
-            options=options,
-            source_documents=source_documents,
-        )
-
-        container.history_service.save_session(
-            session_id=session_id,
-            job_id=job_id,
-            file_names=source_documents,
-            options=options,
-            result=result,
-        )
-
-        jobs.complete_job(job_id, result)
+        pipeline = container.get_pipeline()
+        pipeline.run_job(job_id, session_id, saved_file_paths, options)
     except Exception as exc:  # pragma: no cover
         jobs.fail_job(job_id, str(exc))
 

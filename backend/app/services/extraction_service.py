@@ -34,10 +34,6 @@ def _is_gibberish_like(text: str) -> bool:
     if not compact:
         return True
 
-    # A lot of isolated single-letter tokens usually indicates poor extraction.
-    if re.search(r"(?:\b[a-zA-Z]\b\s+){6,}", compact):
-        return True
-
     tokens = re.findall(r"[A-Za-z0-9\-]+", compact)
     if len(tokens) < 8:
         return True
@@ -47,12 +43,21 @@ def _is_gibberish_like(text: str) -> bool:
         return True
 
     single_letters = [token for token in alpha_tokens if len(token) == 1]
-    if single_letters and (len(single_letters) / max(1, len(alpha_tokens))) > 0.28:
+    long_alpha_tokens = [token for token in alpha_tokens if len(token) >= 4]
+    long_alpha_ratio = len(long_alpha_tokens) / max(1, len(alpha_tokens))
+    single_letter_ratio = len(single_letters) / max(1, len(alpha_tokens))
+
+    # Single-letter streaks often appear in formula-heavy slides; only treat them as
+    # gibberish when the surrounding lexical quality is also weak.
+    repeated_single_pattern = bool(re.search(r"(?:\b[a-zA-Z]\b\s+){6,}", compact))
+    if repeated_single_pattern and long_alpha_ratio < 0.32 and len(compact) < 1800:
+        return True
+    if single_letter_ratio > 0.34 and long_alpha_ratio < 0.36:
         return True
 
     # Very low unique ratio can indicate repeated OCR noise patterns.
     unique_ratio = len(set(tokens)) / max(1, len(tokens))
-    if unique_ratio < 0.22:
+    if unique_ratio < 0.12 and long_alpha_ratio < 0.4 and len(tokens) < 1600:
         return True
 
     return False
@@ -101,6 +106,19 @@ def extract_pdf_page_texts(pdf_path: Path) -> tuple[list[str], int]:
     return page_texts, page_count
 
 
+def extract_pdf_page_image_flags(pdf_path: Path) -> list[bool]:
+    document = fitz.open(pdf_path)
+    page_flags: list[bool] = []
+
+    try:
+        for page in document:
+            page_flags.append(bool(page.get_images(full=True)))
+    finally:
+        document.close()
+
+    return page_flags
+
+
 def extract_pdf_text(pdf_path: Path) -> tuple[str, int]:
     page_texts, page_count = extract_pdf_page_texts(pdf_path)
     text = "\n\n".join(page for page in page_texts if page.strip())
@@ -116,11 +134,10 @@ def is_low_text_pdf(text: str, page_count: int, low_text_char_threshold: int) ->
     average_chars_per_page = text_chars / page_count
 
     # If extracted text is too short OR looks mostly noisy, OCR should be considered.
-    return (
-        text_chars < low_text_char_threshold
-        or average_chars_per_page < 90
-        or _is_gibberish_like(cleaned)
-    )
+    if text_chars < low_text_char_threshold or average_chars_per_page < 90:
+        return True
+
+    return _is_gibberish_like(cleaned) and average_chars_per_page < 180
 
 
 def identify_low_text_pages(
@@ -129,9 +146,38 @@ def identify_low_text_pages(
     low_pages: list[int] = []
     for index, text in enumerate(page_texts):
         cleaned = _normalize_text(text)
-        if len(cleaned) < min_chars_per_page or _is_gibberish_like(cleaned):
+        if len(cleaned) < min_chars_per_page:
+            low_pages.append(index)
+            continue
+        if _is_gibberish_like(cleaned) and len(cleaned) < 260:
             low_pages.append(index)
     return low_pages
+
+
+def identify_pages_for_ocr(
+    page_texts: list[str],
+    page_has_images: list[bool] | None = None,
+    *,
+    min_chars_per_page: int = 90,
+    image_text_threshold: int = 220,
+) -> list[int]:
+    candidate_pages = set(
+        identify_low_text_pages(
+            page_texts=page_texts,
+            min_chars_per_page=min_chars_per_page,
+        )
+    )
+
+    if page_has_images:
+        for index, has_images in enumerate(page_has_images):
+            if not has_images:
+                continue
+
+            cleaned = _normalize_text(page_texts[index] if index < len(page_texts) else "")
+            if not cleaned or len(cleaned) < image_text_threshold:
+                candidate_pages.add(index)
+
+    return sorted(candidate_pages)
 
 
 def _should_replace_with_ocr(direct_text: str, ocr_text: str) -> bool:
@@ -164,15 +210,25 @@ def _should_replace_with_ocr(direct_text: str, ocr_text: str) -> bool:
 def _merge_direct_and_ocr_pages(
     page_texts: list[str],
     ocr_page_map: dict[int, str],
+    page_has_images: list[bool] | None = None,
 ) -> str:
     merged_pages: list[str] = []
 
     for index, direct_text in enumerate(page_texts):
         direct_clean = _normalize_text(direct_text)
         ocr_clean = _normalize_text(ocr_page_map.get(index, ""))
+        has_images = bool(page_has_images[index]) if page_has_images and index < len(page_has_images) else False
 
         if _should_replace_with_ocr(direct_clean, ocr_clean):
             merged_pages.append(ocr_clean)
+        elif (
+            has_images
+            and direct_clean
+            and ocr_clean
+            and ocr_clean.lower() not in direct_clean.lower()
+            and direct_clean.lower() not in ocr_clean.lower()
+        ):
+            merged_pages.append(f"{direct_clean}\n{ocr_clean}".strip())
         else:
             merged_pages.append(direct_clean or ocr_clean)
 
@@ -197,10 +253,16 @@ def extract_file_text(
 
     if extension == ".pdf":
         page_texts, page_count = extract_pdf_page_texts(file_path)
+        page_has_images = extract_pdf_page_image_flags(file_path)
         direct_text = "\n\n".join(page for page in page_texts if page.strip())
         direct_text = _normalize_text(direct_text)
 
-        if is_low_text_pdf(direct_text, page_count, low_text_char_threshold):
+        pages_to_ocr = identify_pages_for_ocr(
+            page_texts=page_texts,
+            page_has_images=page_has_images,
+        )
+
+        if is_low_text_pdf(direct_text, page_count, low_text_char_threshold) or pages_to_ocr:
             if ocr_service is None:
                 return ExtractedDocument(
                     file_name=file_path.name,
@@ -209,8 +271,8 @@ def extract_file_text(
                     page_count=page_count,
                 )
 
-            low_text_pages = identify_low_text_pages(page_texts)
-            pages_to_ocr = low_text_pages if low_text_pages else list(range(page_count))
+            if not pages_to_ocr:
+                pages_to_ocr = list(range(page_count))
 
             ocr_page_map = ocr_service.ocr_pdf_pages(
                 pdf_path=file_path,
@@ -218,7 +280,9 @@ def extract_file_text(
             )
 
             merged_text = _merge_direct_and_ocr_pages(
-                page_texts=page_texts, ocr_page_map=ocr_page_map
+                page_texts=page_texts,
+                ocr_page_map=ocr_page_map,
+                page_has_images=page_has_images,
             )
 
             # If merged text is still weak and OCR was partial, run full OCR once.
@@ -234,6 +298,7 @@ def extract_file_text(
                 merged_text = _merge_direct_and_ocr_pages(
                     page_texts=page_texts,
                     ocr_page_map=full_ocr_page_map,
+                    page_has_images=page_has_images,
                 )
                 ocr_page_map = full_ocr_page_map
 

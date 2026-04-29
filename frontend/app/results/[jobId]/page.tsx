@@ -3,6 +3,8 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
+import { motion } from "framer-motion";
+import { BookOpenText, Files, Layers3 } from "lucide-react";
 
 import { StudyGuideTabs } from "@/components/StudyGuideTabs";
 import { getJobStatus, regenerateSession } from "@/lib/api";
@@ -124,10 +126,33 @@ export default function ResultsPage() {
 
   return (
     <div className="page-stack">
-      <section className="page-title-block">
+      <motion.section
+        className="page-title-block"
+        initial={{ opacity: 0, y: 16 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4, ease: "easeOut" }}
+      >
         <div>
           <h1>Generated Study Guide</h1>
           <p>Output grounded in your uploaded documents through retrieval-augmented generation.</p>
+        </div>
+      </motion.section>
+
+      <section className="results-overview-grid">
+        <div className="glass-card overview-stat">
+          <Files size={18} />
+          <strong>{job.result.source_documents.length}</strong>
+          <span>source document{job.result.source_documents.length === 1 ? "" : "s"}</span>
+        </div>
+        <div className="glass-card overview-stat">
+          <BookOpenText size={18} />
+          <strong>{job.result.unit_wise_summaries.length}</strong>
+          <span>unit summaries</span>
+        </div>
+        <div className="glass-card overview-stat">
+          <Layers3 size={18} />
+          <strong>{job.result.flashcards.length + job.result.qa_sets.length}</strong>
+          <span>study prompts</span>
         </div>
       </section>
 

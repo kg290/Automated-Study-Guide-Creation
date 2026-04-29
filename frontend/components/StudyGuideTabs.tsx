@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
 import { Clipboard, Download } from "lucide-react";
 
 import { StudyGuideResult } from "@/lib/types";
@@ -245,183 +246,224 @@ export function StudyGuideTabs({ result }: StudyGuideTabsProps) {
     URL.revokeObjectURL(url);
   };
 
+  const tabContent =
+    activeTab === "summary" ? (
+      <div className="content-stack">
+        <article className="result-block">
+          <h3>Summary Notes</h3>
+          <p>{cleanResult.summary_notes || "Not available in uploaded material"}</p>
+        </article>
+
+        <article className="result-block">
+          <h3>Unit and Chapter Guide</h3>
+          <div className="card-grid">
+            {cleanResult.unit_wise_summaries.length > 0 ? (
+              cleanResult.unit_wise_summaries.map((item, index) => (
+                <motion.div
+                  className="result-card"
+                  key={`${item.unit_title}-${index}`}
+                  whileHover={{ y: -4 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <h4>{item.unit_title}</h4>
+                  <p>{item.summary}</p>
+                  {item.key_points.length > 0 ? (
+                    <ul className="list-grid">
+                      {item.key_points.map((point, pointIndex) => (
+                        <li key={`${item.unit_title}-point-${pointIndex}`}>{point}</li>
+                      ))}
+                    </ul>
+                  ) : null}
+                </motion.div>
+              ))
+            ) : (
+              <div className="result-card">
+                <p>Not available in uploaded material</p>
+              </div>
+            )}
+          </div>
+        </article>
+
+        <article className="result-block">
+          <h3>Key Concepts</h3>
+          <ul className="list-grid">
+            {cleanResult.key_concepts.length > 0 ? (
+              cleanResult.key_concepts.map((item) => <li key={item}>{item}</li>)
+            ) : (
+              <li>Not available in uploaded material</li>
+            )}
+          </ul>
+        </article>
+
+        <article className="result-block">
+          <h3>Topic-wise Notes</h3>
+          <div className="card-grid">
+            {cleanResult.topic_wise_notes.length > 0 ? (
+              cleanResult.topic_wise_notes.map((item) => (
+                <motion.div className="result-card" key={item.topic} whileHover={{ y: -4 }} transition={{ duration: 0.2 }}>
+                  <h4>{item.topic}</h4>
+                  <p>{item.notes}</p>
+                </motion.div>
+              ))
+            ) : (
+              <div className="result-card">
+                <p>Not available in uploaded material</p>
+              </div>
+            )}
+          </div>
+        </article>
+
+        <article className="result-block">
+          <h3>Viva Questions</h3>
+          <ul className="list-grid">
+            {cleanResult.viva_questions.length > 0 ? (
+              cleanResult.viva_questions.map((item) => <li key={item}>{item}</li>)
+            ) : (
+              <li>Not available in uploaded material</li>
+            )}
+          </ul>
+        </article>
+      </div>
+    ) : null;
+
   return (
     <section className="glass-card">
       <div className="tabs-header">
         <div className="tabs-row">
           {TABS.map((tab) => (
-            <button
+            <motion.button
               key={tab.id}
               type="button"
               className={`tab-pill ${activeTab === tab.id ? "tab-pill-active" : ""}`}
               onClick={() => setActiveTab(tab.id)}
+              whileHover={{ y: -2 }}
+              whileTap={{ scale: 0.97 }}
             >
               {tab.label}
-            </button>
+            </motion.button>
           ))}
         </div>
         <div className="action-row">
-          <button type="button" className="mini-button" onClick={handleCopy}>
+          <motion.button type="button" className="mini-button" onClick={handleCopy} whileHover={{ y: -2 }}>
             <Clipboard size={14} />
             {copyMessage || "Copy"}
-          </button>
-          <button type="button" className="mini-button" onClick={handleDownload}>
+          </motion.button>
+          <motion.button type="button" className="mini-button" onClick={handleDownload} whileHover={{ y: -2 }}>
             <Download size={14} />
             Download
-          </button>
+          </motion.button>
         </div>
       </div>
 
-      {activeTab === "summary" ? (
-        <div className="content-stack">
-          <article className="result-block">
-            <h3>Summary Notes</h3>
-            <p>{cleanResult.summary_notes || "Not available in uploaded material"}</p>
-          </article>
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={activeTab}
+          className="tab-panel"
+          initial={{ opacity: 0, y: 14 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -10 }}
+          transition={{ duration: 0.24, ease: "easeOut" }}
+        >
+          {activeTab === "summary" ? tabContent : null}
 
-          <article className="result-block">
-            <h3>Unit and Chapter Guide</h3>
+          {activeTab === "units" ? (
             <div className="card-grid">
               {cleanResult.unit_wise_summaries.length > 0 ? (
                 cleanResult.unit_wise_summaries.map((item, index) => (
-                  <div className="result-card" key={`${item.unit_title}-${index}`}>
+                  <motion.article
+                    className="result-card"
+                    key={`${item.unit_title}-${index}`}
+                    whileHover={{ y: -4 }}
+                    transition={{ duration: 0.2 }}
+                  >
                     <h4>{item.unit_title}</h4>
                     <p>{item.summary}</p>
                     {item.key_points.length > 0 ? (
                       <ul className="list-grid">
                         {item.key_points.map((point, pointIndex) => (
-                          <li key={`${item.unit_title}-point-${pointIndex}`}>{point}</li>
+                          <li key={`${item.unit_title}-tab-point-${pointIndex}`}>{point}</li>
                         ))}
                       </ul>
                     ) : null}
-                  </div>
+                  </motion.article>
                 ))
               ) : (
                 <div className="result-card">
-                  <p>Not available in uploaded material</p>
+                  <p>No unit or chapter summaries generated for this session.</p>
                 </div>
               )}
             </div>
-          </article>
+          ) : null}
 
-          <article className="result-block">
-            <h3>Key Concepts</h3>
-            <ul className="list-grid">
-              {cleanResult.key_concepts.length > 0 ? (
-                cleanResult.key_concepts.map((item) => <li key={item}>{item}</li>)
-              ) : (
-                <li>Not available in uploaded material</li>
-              )}
-            </ul>
-          </article>
-
-          <article className="result-block">
-            <h3>Topic-wise Notes</h3>
+          {activeTab === "flashcards" ? (
             <div className="card-grid">
-              {cleanResult.topic_wise_notes.length > 0 ? (
-                cleanResult.topic_wise_notes.map((item) => (
-                  <div className="result-card" key={item.topic}>
-                    <h4>{item.topic}</h4>
-                    <p>{item.notes}</p>
-                  </div>
+              {cleanResult.flashcards.length > 0 ? (
+                cleanResult.flashcards.map((card, index) => (
+                  <motion.article
+                    className="result-card"
+                    key={`${card.question}-${index}`}
+                    whileHover={{ y: -4, rotate: -0.4 }}
+                    transition={{ duration: 0.2 }}
+                  >
+                    <span className="badge">{card.bloom_level}</span>
+                    <h4>{card.question}</h4>
+                    <p>{card.answer}</p>
+                  </motion.article>
                 ))
               ) : (
                 <div className="result-card">
-                  <p>Not available in uploaded material</p>
+                  <p>No flashcards generated for this session.</p>
                 </div>
               )}
             </div>
-          </article>
+          ) : null}
 
-          <article className="result-block">
-            <h3>Viva Questions</h3>
-            <ul className="list-grid">
-              {cleanResult.viva_questions.length > 0 ? (
-                cleanResult.viva_questions.map((item) => <li key={item}>{item}</li>)
+          {activeTab === "qa" ? (
+            <div className="card-grid">
+              {cleanResult.qa_sets.length > 0 ? (
+                cleanResult.qa_sets.map((item, index) => (
+                  <motion.article
+                    className="result-card"
+                    key={`${item.question}-${index}`}
+                    whileHover={{ y: -4 }}
+                    transition={{ duration: 0.2 }}
+                  >
+                    <span className="badge">{item.bloom_level}</span>
+                    <h4>{item.question}</h4>
+                    <p>{item.answer}</p>
+                  </motion.article>
+                ))
               ) : (
-                <li>Not available in uploaded material</li>
+                <div className="result-card">
+                  <p>No Q&A content generated for this session.</p>
+                </div>
               )}
-            </ul>
-          </article>
-        </div>
-      ) : null}
-
-      {activeTab === "units" ? (
-        <div className="card-grid">
-          {cleanResult.unit_wise_summaries.length > 0 ? (
-            cleanResult.unit_wise_summaries.map((item, index) => (
-              <article className="result-card" key={`${item.unit_title}-${index}`}>
-                <h4>{item.unit_title}</h4>
-                <p>{item.summary}</p>
-                {item.key_points.length > 0 ? (
-                  <ul className="list-grid">
-                    {item.key_points.map((point, pointIndex) => (
-                      <li key={`${item.unit_title}-tab-point-${pointIndex}`}>{point}</li>
-                    ))}
-                  </ul>
-                ) : null}
-              </article>
-            ))
-          ) : (
-            <div className="result-card">
-              <p>No unit or chapter summaries generated for this session.</p>
             </div>
-          )}
-        </div>
-      ) : null}
+          ) : null}
 
-      {activeTab === "flashcards" ? (
-        <div className="card-grid">
-          {cleanResult.flashcards.length > 0 ? (
-            cleanResult.flashcards.map((card, index) => (
-              <article className="result-card" key={`${card.question}-${index}`}>
-                <span className="badge">{card.bloom_level}</span>
-                <h4>{card.question}</h4>
-                <p>{card.answer}</p>
-              </article>
-            ))
-          ) : (
-            <div className="result-card">
-              <p>No flashcards generated for this session.</p>
+          {activeTab === "difficulty" ? (
+            <div className="card-grid">
+              {cleanResult.difficulty_explanations.length > 0 ? (
+                cleanResult.difficulty_explanations.map((item) => (
+                  <motion.article
+                    className="result-card"
+                    key={item.mode}
+                    whileHover={{ y: -4 }}
+                    transition={{ duration: 0.2 }}
+                  >
+                    <span className="badge">{item.mode}</span>
+                    <p>{item.explanation}</p>
+                  </motion.article>
+                ))
+              ) : (
+                <div className="result-card">
+                  <p>No difficulty-mode explanation generated for this session.</p>
+                </div>
+              )}
             </div>
-          )}
-        </div>
-      ) : null}
-
-      {activeTab === "qa" ? (
-        <div className="card-grid">
-          {cleanResult.qa_sets.length > 0 ? (
-            cleanResult.qa_sets.map((item, index) => (
-              <article className="result-card" key={`${item.question}-${index}`}>
-                <span className="badge">{item.bloom_level}</span>
-                <h4>{item.question}</h4>
-                <p>{item.answer}</p>
-              </article>
-            ))
-          ) : (
-            <div className="result-card">
-              <p>No Q&A content generated for this session.</p>
-            </div>
-          )}
-        </div>
-      ) : null}
-
-      {activeTab === "difficulty" ? (
-        <div className="card-grid">
-          {cleanResult.difficulty_explanations.length > 0 ? (
-            cleanResult.difficulty_explanations.map((item) => (
-              <article className="result-card" key={item.mode}>
-                <span className="badge">{item.mode}</span>
-                <p>{item.explanation}</p>
-              </article>
-            ))
-          ) : (
-            <div className="result-card">
-              <p>No difficulty-mode explanation generated for this session.</p>
-            </div>
-          )}
-        </div>
-      ) : null}
+          ) : null}
+        </motion.div>
+      </AnimatePresence>
     </section>
   );
 }

@@ -1,5 +1,8 @@
 "use client";
 
+import { motion } from "framer-motion";
+import { BrainCircuit, Layers3, Wand2 } from "lucide-react";
+
 import { BLOOM_OPTIONS, DIFFICULTY_OPTIONS, OUTPUT_OPTIONS } from "@/lib/constants";
 
 interface OutputConfiguratorProps {
@@ -48,9 +51,29 @@ export function OutputConfigurator({
   };
 
   return (
-    <section className="glass-card">
+    <motion.section
+      className="glass-card"
+      initial={{ opacity: 0, y: 16 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4, delay: 0.08, ease: "easeOut" }}
+    >
       <h3 className="section-title">Choose Generated Outputs</h3>
       <p className="section-subtitle">Configure exactly what the AI should generate from your uploaded material.</p>
+
+      <div className="selection-summary">
+        <span className="selection-chip">
+          <Layers3 size={14} />
+          {outputTypes.length} output modes
+        </span>
+        <span className="selection-chip">
+          <Wand2 size={14} />
+          {difficultyModes.length} difficulty tracks
+        </span>
+        <span className="selection-chip">
+          <BrainCircuit size={14} />
+          {bloomLevels.length} Bloom levels
+        </span>
+      </div>
 
       <div className="grounding-banner">
         <strong>Strict Grounding Mode</strong>
@@ -61,15 +84,17 @@ export function OutputConfigurator({
         {OUTPUT_OPTIONS.map((option) => {
           const active = outputTypes.includes(option.id);
           return (
-            <button
+            <motion.button
               key={option.id}
               type="button"
               onClick={() => toggleOutputType(option.id)}
               className={`pill-option ${active ? "pill-option-active" : ""}`}
+              whileHover={{ y: -3, scale: 1.01 }}
+              whileTap={{ scale: 0.985 }}
             >
               <strong>{option.label}</strong>
               <span>{option.description}</span>
-            </button>
+            </motion.button>
           );
         })}
       </div>
@@ -79,14 +104,16 @@ export function OutputConfigurator({
         {DIFFICULTY_OPTIONS.map((option) => {
           const active = difficultyModes.includes(option.id);
           return (
-            <button
+            <motion.button
               key={option.id}
               type="button"
               className={`chip-option ${active ? "chip-option-active" : ""}`}
               onClick={() => toggleDifficultyMode(option.id)}
+              whileHover={{ y: -2 }}
+              whileTap={{ scale: 0.97 }}
             >
               {option.label}
-            </button>
+            </motion.button>
           );
         })}
       </div>
@@ -96,14 +123,16 @@ export function OutputConfigurator({
         {BLOOM_OPTIONS.map((option) => {
           const active = bloomLevels.includes(option.id);
           return (
-            <button
+            <motion.button
               key={option.id}
               type="button"
               className={`chip-option ${active ? "chip-option-active" : ""}`}
               onClick={() => toggleBloomLevel(option.id)}
+              whileHover={{ y: -2 }}
+              whileTap={{ scale: 0.97 }}
             >
               {option.label}
-            </button>
+            </motion.button>
           );
         })}
       </div>
@@ -119,6 +148,6 @@ export function OutputConfigurator({
         value={customPrompt}
         onChange={(event) => onCustomPromptChange(event.target.value)}
       />
-    </section>
+    </motion.section>
   );
 }

@@ -61,6 +61,29 @@ class _GeminiStudyGuideSchema(BaseModel):
     difficulty_explanations: list[_GeminiDifficultySchema] = Field(default_factory=list)
 
 
+class _GeminiSummaryConceptSchema(BaseModel):
+    summary_notes: str = ""
+    key_concepts: list[str] = Field(default_factory=list)
+
+
+class _GeminiUnitTopicSchema(BaseModel):
+    unit_wise_summaries: list[_GeminiUnitSummarySchema] = Field(default_factory=list)
+    topic_wise_notes: list[_GeminiTopicNoteSchema] = Field(default_factory=list)
+
+
+class _GeminiFlashcardBundleSchema(BaseModel):
+    flashcards: list[_GeminiFlashcardSchema] = Field(default_factory=list)
+
+
+class _GeminiQABundleSchema(BaseModel):
+    qa_sets: list[_GeminiQASchema] = Field(default_factory=list)
+
+
+class _GeminiVivaDifficultySchema(BaseModel):
+    viva_questions: list[str] = Field(default_factory=list)
+    difficulty_explanations: list[_GeminiDifficultySchema] = Field(default_factory=list)
+
+
 class GeminiGenerationService:
     NOT_AVAILABLE = "Not available in uploaded material"
     BLOOM_LEVELS = ("remember", "understand", "apply", "analyze")
@@ -173,27 +196,29 @@ class GeminiGenerationService:
             "custom_prompt": options.custom_prompt,
         }
 
-        system_prompt, user_prompt = self._build_prompts(
-            context=context, payload=payload
-        )
+        with self._REQUEST_LOCK:
+            filtered = self._generate_grouped_outputs(
+                context=context,
+                options=options,
+                source_documents=source_documents,
+            )
 
-        parsed: dict[str, Any]
-        try:
-            with self._REQUEST_LOCK:
-                parsed = self._generate_with_gemini(
-                    system_prompt=system_prompt,
-                    user_prompt=user_prompt,
-                    options=options,
+            if self._should_retry_underfilled_result(filtered, options):
+                fallback_filtered = self._filter_by_options(
+                    self._build_fallback_output(
+                        context,
+                        reason="post-generation quality rescue",
+                        focus_text=options.custom_prompt,
+                    ),
+                    options,
+                    context,
+                    allowed_sources=set(source_documents),
                 )
-        except Exception as exc:
-            parsed = self._build_fallback_output(context, reason=str(exc))
-
-        filtered = self._filter_by_options(
-            parsed,
-            options,
-            context,
-            allowed_sources=set(source_documents),
-        )
+                filtered = self._merge_result_payloads(
+                    filtered,
+                    fallback_filtered,
+                    prefer_existing=True,
+                )
 
         return StudyGuideResult(
             summary_notes=filtered.get("summary_notes", ""),
@@ -213,6 +238,13 @@ class GeminiGenerationService:
         context: str,
         payload: dict[str, Any],
     ) -> tuple[str, str]:
+        custom_focus = str(payload.get("custom_prompt", "")).strip()
+        requested_outputs = {
+            item.strip().lower()
+            for item in payload.get("output_types", [])
+            if str(item).strip()
+        }
+        block_count = max(1, len(self._parse_context_blocks(context)))
         system_prompt = (
             "You are an academic study-guide generator. "
             "You must use ONLY the provided context blocks. "
@@ -220,7 +252,19 @@ class GeminiGenerationService:
             "[source:FILE_NAME | chunk:INDEX]. "
             f"If evidence is missing, output exactly '{self.NOT_AVAILABLE}'. "
             "Do not invent facts, definitions, formulas, names, or examples. "
+            "When a custom focus is supplied, prioritize that focus explicitly, but still produce the full requested outputs from the document if supporting evidence exists. "
             "Return only JSON and never include free text outside the JSON object."
+        )
+
+        focus_instructions = (
+            f"""
+Custom focus requirement:
+- Prioritize this focus strongly when selecting relevant content: "{custom_focus}".
+- If the focus exists in the context, include it explicitly in at least one unit summary, one topic note, and one QA/flashcard answer when those sections are requested.
+- Do not leave all outputs unavailable just because the focus is narrow; still generate the broader requested study guide from the document.
+""".strip()
+            if custom_focus
+            else ""
         )
 
         user_prompt = f"""
@@ -231,20 +275,9 @@ Generation request:
 {json.dumps(payload, indent=2)}
 
 Output quality constraints:
-- summary_notes: comprehensive narrative covering all units; 4 to 8 short paragraphs with citations; total <= 320 words.
-- unit_wise_summaries: 6 to 12 ordered units/chapters that together cover the document from beginning to end.
-  Each unit must have:
-  - unit_title
-  - summary (<= 110 words, with citation)
-  - key_points (2 to 5 concise bullet-style strings, each grounded and cited)
-- key_concepts: maximum 14 grounded phrases (prefer 2 to 5 words each).
-- topic_wise_notes: maximum 10 topics; each notes field <= 90 words and must include citation.
-- flashcards: maximum 12 cards; each answer <= 75 words and must include citation.
-  Each flashcard must include bloom_level from requested bloom_levels.
-- qa_sets: maximum 12 Q&A items; each answer <= 90 words and must include citation.
-  Each QA item must include bloom_level from requested bloom_levels.
-- viva_questions: maximum 8 focused questions.
-- difficulty_explanations: include requested modes only; each explanation <= 100 words and must include citation.
+{self._build_quality_constraints(requested_outputs, block_count)}
+
+{focus_instructions}
 
 Hard grounding rules:
 - Use only the given context blocks and their chunk tags.
@@ -253,29 +286,110 @@ Hard grounding rules:
 - Do not emit partial JSON, comments, markdown, or explanatory prose outside the JSON object.
 
 Return strict JSON matching this schema exactly:
-{{
-  "summary_notes": "string",
-  "unit_wise_summaries": [
-    {{
-      "unit_title": "string",
-      "summary": "string",
-      "key_points": ["string"]
-    }}
-  ],
-  "key_concepts": ["string"],
-  "topic_wise_notes": [{{"topic": "string", "notes": "string"}}],
-  "flashcards": [{{"question": "string", "answer": "string", "bloom_level": "string"}}],
-  "qa_sets": [{{"question": "string", "answer": "string", "bloom_level": "string"}}],
-  "viva_questions": ["string"],
-  "difficulty_explanations": [
-    {{"mode": "beginner", "explanation": "string"}},
-    {{"mode": "intermediate", "explanation": "string"}},
-    {{"mode": "advanced", "explanation": "string"}}
-  ]
-}}
+{self._build_requested_schema(requested_outputs)}
 """.strip()
 
         return system_prompt, user_prompt
+
+    def _build_quality_constraints(
+        self,
+        requested_outputs: set[str],
+        block_count: int,
+    ) -> str:
+        unit_target = min(8, max(4, block_count))
+        concept_target = min(12, max(6, block_count * 2))
+        topic_target = min(8, max(4, block_count))
+        flashcard_target = min(6, max(4, block_count))
+        qa_target = min(6, max(4, block_count))
+        viva_target = min(6, max(4, block_count))
+        unit_summary_limit = 110
+        unit_point_limit = "2 to 5"
+        topic_note_limit = 90
+
+        if requested_outputs == {"unit_summaries"}:
+            unit_target = min(6, max(4, block_count // 2))
+            unit_summary_limit = 85
+            unit_point_limit = "2 to 3"
+        if requested_outputs == {"topic_notes"}:
+            topic_target = min(6, max(4, block_count // 2))
+            topic_note_limit = 70
+        constraints: list[str] = []
+        if "summary" in requested_outputs:
+            constraints.append(
+                "- summary_notes: comprehensive narrative covering all units; 4 to 8 short paragraphs with citations; total <= 320 words."
+            )
+        if "unit_summaries" in requested_outputs:
+            constraints.extend(
+                [
+                    f"- unit_wise_summaries: {unit_target} ordered units/chapters that together cover the document from beginning to end.",
+                    "  Each unit must have:",
+                    "  - unit_title",
+                    f"  - summary (<= {unit_summary_limit} words, with citation)",
+                    f"  - key_points ({unit_point_limit} concise bullet-style strings, each grounded and cited)",
+                ]
+            )
+        if "key_concepts" in requested_outputs:
+            constraints.append(
+                f"- key_concepts: maximum {concept_target} grounded phrases (prefer 2 to 5 words each)."
+            )
+        if "topic_notes" in requested_outputs:
+            constraints.append(
+                f"- topic_wise_notes: maximum {topic_target} topics; each notes field <= {topic_note_limit} words and must include citation."
+            )
+        if "flashcards" in requested_outputs:
+            constraints.extend(
+                [
+                    f"- flashcards: maximum {flashcard_target} cards; each answer <= 75 words and must include citation.",
+                    "  Each flashcard must include bloom_level from requested bloom_levels.",
+                ]
+            )
+        if "qa" in requested_outputs:
+            constraints.extend(
+                [
+                    f"- qa_sets: maximum {qa_target} Q&A items; each answer <= 90 words and must include citation.",
+                    "  Each QA item must include bloom_level from requested bloom_levels.",
+                ]
+            )
+        if "viva" in requested_outputs:
+            constraints.append(
+                f"- viva_questions: maximum {viva_target} focused questions."
+            )
+        if "difficulty" in requested_outputs:
+            constraints.append(
+                "- difficulty_explanations: include requested modes only; each explanation <= 100 words and must include citation."
+            )
+        return "\n".join(constraints)
+
+    def _build_requested_schema(self, requested_outputs: set[str]) -> str:
+        schema_parts: list[str] = []
+        if "summary" in requested_outputs:
+            schema_parts.append('  "summary_notes": "string"')
+        if "unit_summaries" in requested_outputs:
+            schema_parts.append(
+                '  "unit_wise_summaries": [{"unit_title": "string", "summary": "string", "key_points": ["string"]}]'
+            )
+        if "key_concepts" in requested_outputs:
+            schema_parts.append('  "key_concepts": ["string"]')
+        if "topic_notes" in requested_outputs:
+            schema_parts.append(
+                '  "topic_wise_notes": [{"topic": "string", "notes": "string"}]'
+            )
+        if "flashcards" in requested_outputs:
+            schema_parts.append(
+                '  "flashcards": [{"question": "string", "answer": "string", "bloom_level": "string"}]'
+            )
+        if "qa" in requested_outputs:
+            schema_parts.append(
+                '  "qa_sets": [{"question": "string", "answer": "string", "bloom_level": "string"}]'
+            )
+        if "viva" in requested_outputs:
+            schema_parts.append('  "viva_questions": ["string"]')
+        if "difficulty" in requested_outputs:
+            schema_parts.append(
+                '  "difficulty_explanations": [{"mode": "beginner", "explanation": "string"}, {"mode": "intermediate", "explanation": "string"}, {"mode": "advanced", "explanation": "string"}]'
+            )
+
+        return "{\n" + ",\n".join(schema_parts) + "\n}"
 
     def _build_generation_config(
         self,
@@ -293,7 +407,7 @@ Return strict JSON matching this schema exactly:
             if item and item.strip()
         }
         requested_sections = max(1, len(output_types))
-        base_max_output_tokens = min(8192, 2200 + (requested_sections * 650))
+        base_max_output_tokens = min(5600, 1800 + (requested_sections * 420))
         max_output_tokens = max_output_tokens_override or base_max_output_tokens
 
         config_kwargs: dict[str, Any] = {
@@ -305,8 +419,13 @@ Return strict JSON matching this schema exactly:
             "max_output_tokens": max_output_tokens,
             "response_mime_type": "application/json",
         }
-        if use_response_schema:
-            config_kwargs["response_schema"] = _GeminiStudyGuideSchema
+        response_schema = (
+            self._response_schema_for_output_types(output_types)
+            if use_response_schema
+            else None
+        )
+        if response_schema is not None:
+            config_kwargs["response_schema"] = response_schema
 
         automatic_function_calling_cls = getattr(
             types, "AutomaticFunctionCallingConfig", None
@@ -316,7 +435,52 @@ Return strict JSON matching this schema exactly:
                 automatic_function_calling_cls(disable=True)
             )
 
+        thinking_config_cls = getattr(types, "ThinkingConfig", None)
+        if thinking_config_cls is not None:
+            config_kwargs["thinking_config"] = thinking_config_cls(
+                include_thoughts=False,
+                thinking_budget=0,
+            )
+
         return types.GenerateContentConfig(**config_kwargs)
+
+    def _response_schema_for_output_types(
+        self,
+        output_types: set[str],
+    ) -> type[BaseModel] | None:
+        full_schema_outputs = {
+            "summary",
+            "unit_summaries",
+            "key_concepts",
+            "topic_notes",
+            "flashcards",
+            "qa",
+            "viva",
+            "difficulty",
+        }
+        if output_types == full_schema_outputs:
+            return _GeminiStudyGuideSchema
+        if output_types == {"summary", "key_concepts"} or output_types == {"summary"}:
+            return _GeminiSummaryConceptSchema
+        if output_types == {"key_concepts"}:
+            return _GeminiSummaryConceptSchema
+        if output_types == {"unit_summaries", "topic_notes"}:
+            return _GeminiUnitTopicSchema
+        if output_types == {"unit_summaries"}:
+            return _GeminiUnitTopicSchema
+        if output_types == {"topic_notes"}:
+            return _GeminiUnitTopicSchema
+        if output_types == {"flashcards"}:
+            return _GeminiFlashcardBundleSchema
+        if output_types == {"qa"}:
+            return _GeminiQABundleSchema
+        if output_types == {"viva", "difficulty"}:
+            return _GeminiVivaDifficultySchema
+        if output_types == {"viva"}:
+            return _GeminiVivaDifficultySchema
+        if output_types == {"difficulty"}:
+            return _GeminiVivaDifficultySchema
+        return None
 
     def _generate_with_gemini(
         self,
@@ -347,8 +511,15 @@ Return strict JSON matching this schema exactly:
                     )
 
                     parsed_payload = self._extract_payload_from_response(response)
-                    if parsed_payload is not None:
+                    if parsed_payload is not None and not self._is_payload_effectively_empty(
+                        parsed_payload
+                    ):
                         return parsed_payload
+
+                    if self._response_hit_max_tokens(response):
+                        raise RuntimeError(
+                            "Gemini response hit max tokens before producing valid JSON."
+                        )
 
                     compact_retry_payload = self._retry_compact_generation(
                         model_name=model_name,
@@ -387,7 +558,11 @@ Return strict JSON matching this schema exactly:
                     error_text = str(exc).lower()
                     last_error = exc
 
-                    if "404" in error_text or "not_found" in error_text:
+                    if (
+                        "404" in error_text
+                        or "not_found" in error_text
+                        or "max tokens" in error_text
+                    ):
                         break
 
                     if "429" in error_text or "resource_exhausted" in error_text:
@@ -411,6 +586,310 @@ Return strict JSON matching this schema exactly:
                     break
 
         raise RuntimeError(f"Gemini generation unavailable after retries: {last_error}")
+
+    def _empty_result_payload(self) -> dict[str, Any]:
+        return {
+            "summary_notes": "",
+            "unit_wise_summaries": [],
+            "key_concepts": [],
+            "topic_wise_notes": [],
+            "flashcards": [],
+            "qa_sets": [],
+            "viva_questions": [],
+            "difficulty_explanations": [],
+        }
+
+    def _generate_grouped_outputs(
+        self,
+        *,
+        context: str,
+        options: GenerationOptions,
+        source_documents: list[str],
+    ) -> dict[str, Any]:
+        grouped_output_types = self._build_output_groups(options.output_types)
+        merged = self._empty_result_payload()
+
+        for output_group in grouped_output_types:
+            group_options = GenerationOptions(
+                output_types=output_group,
+                difficulty_modes=options.difficulty_modes,
+                bloom_levels=options.bloom_levels,
+                custom_prompt=options.custom_prompt,
+            )
+            payload = {
+                "output_types": group_options.output_types,
+                "difficulty_modes": group_options.difficulty_modes,
+                "bloom_levels": group_options.bloom_levels,
+                "custom_prompt": group_options.custom_prompt,
+            }
+            system_prompt, user_prompt = self._build_prompts(
+                context=context,
+                payload=payload,
+            )
+
+            try:
+                parsed = self._generate_with_gemini(
+                    system_prompt=system_prompt,
+                    user_prompt=user_prompt,
+                    options=group_options,
+                )
+            except Exception as exc:
+                logger.warning(
+                    "Grouped generation failed for outputs %s; using grounded fallback: %s",
+                    output_group,
+                    exc,
+                )
+                parsed = self._build_fallback_output(
+                    context,
+                    reason=f"grouped generation failure for {','.join(output_group)}",
+                    focus_text=options.custom_prompt,
+                )
+
+            filtered = self._filter_by_options(
+                parsed,
+                group_options,
+                context,
+                allowed_sources=set(source_documents),
+            )
+            merged = self._merge_result_payloads(
+                merged,
+                filtered,
+                prefer_existing=True,
+            )
+
+        return merged
+
+    def _build_output_groups(self, output_types: list[str]) -> list[list[str]]:
+        normalized = [
+            item.strip().lower()
+            for item in output_types
+            if item and item.strip()
+        ]
+        groups: list[list[str]] = []
+        preferred_groups = [
+            ["summary", "key_concepts"],
+            ["unit_summaries"],
+            ["topic_notes"],
+            ["flashcards"],
+            ["qa"],
+            ["viva", "difficulty"],
+        ]
+
+        for preferred_group in preferred_groups:
+            selected = [item for item in preferred_group if item in normalized]
+            if selected:
+                groups.append(selected)
+
+        covered = {item for group in groups for item in group}
+        for item in normalized:
+            if item not in covered:
+                groups.append([item])
+
+        return groups or [normalized]
+
+    def _merge_result_payloads(
+        self,
+        base: dict[str, Any],
+        incoming: dict[str, Any],
+        *,
+        prefer_existing: bool = False,
+    ) -> dict[str, Any]:
+        merged = dict(base)
+        for key, value in incoming.items():
+            if isinstance(value, list):
+                if prefer_existing and merged.get(key):
+                    continue
+                if value:
+                    merged[key] = value
+            elif prefer_existing and merged.get(key) not in {"", self.NOT_AVAILABLE, None}:
+                continue
+            elif value not in {"", self.NOT_AVAILABLE, None}:
+                merged[key] = value
+            elif key not in merged:
+                merged[key] = value
+        return merged
+
+    def _response_hit_max_tokens(self, response: Any) -> bool:
+        for candidate in getattr(response, "candidates", None) or []:
+            finish_reason = getattr(candidate, "finish_reason", None)
+            if finish_reason is None:
+                continue
+            if str(finish_reason).upper().endswith("MAX_TOKENS"):
+                return True
+        return False
+
+    def _is_payload_effectively_empty(self, payload: dict[str, Any]) -> bool:
+        if not isinstance(payload, dict):
+            return True
+
+        scalar_fields = [
+            str(payload.get("summary_notes", "") or "").strip(),
+        ]
+        list_fields = [
+            payload.get("unit_wise_summaries", []),
+            payload.get("key_concepts", []),
+            payload.get("topic_wise_notes", []),
+            payload.get("flashcards", []),
+            payload.get("qa_sets", []),
+            payload.get("viva_questions", []),
+            payload.get("difficulty_explanations", []),
+        ]
+
+        if any(field and field != self.NOT_AVAILABLE for field in scalar_fields):
+            return False
+
+        for items in list_fields:
+            if not isinstance(items, list):
+                continue
+            if any(bool(item) for item in items):
+                return False
+
+        return True
+
+    def _build_rescue_prompt(
+        self,
+        *,
+        base_user_prompt: str,
+        custom_prompt: str,
+    ) -> str:
+        focus_line = (
+            f'- Give special attention to the custom focus: "{custom_prompt.strip()}".\n'
+            if custom_prompt.strip()
+            else ""
+        )
+        return (
+            f"{base_user_prompt}\n\n"
+            "Rescue pass instructions:\n"
+            "- First infer the structure of the document from the context blocks.\n"
+            "- Then generate the requested study-guide sections from that understanding.\n"
+            "- Do not return every requested field as unavailable when the context clearly contains relevant material.\n"
+            f"{focus_line}"
+            "- Prefer grounded, concise content over placeholders.\n"
+            "Return strict JSON only."
+        )
+
+    def _result_score(
+        self,
+        result: dict[str, Any],
+        options: GenerationOptions,
+    ) -> int:
+        output_types = {
+            item.strip().lower()
+            for item in options.output_types
+            if item and item.strip()
+        }
+        score = 0
+        unique_citations = self._unique_citation_count(result)
+        focus_hits = self._focus_hit_count(result, options.custom_prompt)
+        duplicate_penalty = self._duplicate_content_penalty(result)
+
+        if "summary" in output_types and result.get("summary_notes") not in {"", self.NOT_AVAILABLE}:
+            score += 3
+        if "unit_summaries" in output_types:
+            score += min(3, len(result.get("unit_wise_summaries", [])))
+        if "key_concepts" in output_types:
+            score += min(2, len(result.get("key_concepts", [])) // 3)
+        if "topic_notes" in output_types:
+            score += min(2, len(result.get("topic_wise_notes", [])) // 2)
+        if "flashcards" in output_types:
+            score += min(2, len(result.get("flashcards", [])) // 2)
+        if "qa" in output_types:
+            score += min(2, len(result.get("qa_sets", [])) // 2)
+        if "viva" in output_types and len(result.get("viva_questions", [])) > 0:
+            score += 1
+        if "difficulty" in output_types and len(result.get("difficulty_explanations", [])) > 0:
+            score += 1
+        score += min(3, unique_citations // 3)
+        score += min(2, focus_hits)
+        score -= duplicate_penalty
+
+        return score
+
+    def _unique_citation_count(self, result: dict[str, Any]) -> int:
+        citations: set[str] = set()
+        values: list[str] = []
+        summary = str(result.get("summary_notes", "") or "").strip()
+        if summary:
+            values.append(summary)
+        for item in result.get("unit_wise_summaries", []):
+            if isinstance(item, UnitSummary):
+                values.append(item.summary)
+                values.extend(item.key_points)
+        for item in result.get("topic_wise_notes", []):
+            if isinstance(item, TopicNote):
+                values.append(item.notes)
+        for item in result.get("flashcards", []):
+            if isinstance(item, Flashcard):
+                values.append(item.answer)
+        for item in result.get("qa_sets", []):
+            if isinstance(item, QAItem):
+                values.append(item.answer)
+        for item in result.get("difficulty_explanations", []):
+            if isinstance(item, DifficultyExplanation):
+                values.append(item.explanation)
+
+        for value in values:
+            for citation in self._extract_citations(value):
+                citations.add(citation["tag"])
+        return len(citations)
+
+    def _focus_hit_count(self, result: dict[str, Any], focus_text: str) -> int:
+        focus = " ".join((focus_text or "").split()).strip().lower()
+        if not focus:
+            return 0
+
+        focus_terms = {
+            token.lower()
+            for token in re.findall(r"[A-Za-z0-9][A-Za-z0-9\-.]{1,}", focus)
+            if token.lower() not in self.STOP_WORDS
+        }
+        if not focus_terms:
+            return 0
+
+        values: list[str] = []
+        values.append(str(result.get("summary_notes", "") or ""))
+        for item in result.get("unit_wise_summaries", []):
+            if isinstance(item, UnitSummary):
+                values.append(f"{item.unit_title} {item.summary}")
+        for item in result.get("topic_wise_notes", []):
+            if isinstance(item, TopicNote):
+                values.append(f"{item.topic} {item.notes}")
+        for item in result.get("flashcards", []):
+            if isinstance(item, Flashcard):
+                values.append(f"{item.question} {item.answer}")
+        for item in result.get("qa_sets", []):
+            if isinstance(item, QAItem):
+                values.append(f"{item.question} {item.answer}")
+
+        hit_count = 0
+        for value in values:
+            lowered = value.lower()
+            if focus in lowered:
+                hit_count += 1
+                continue
+            overlap = sum(1 for token in focus_terms if token in lowered)
+            if overlap >= max(2, len(focus_terms) // 2):
+                hit_count += 1
+        return hit_count
+
+    def _duplicate_content_penalty(self, result: dict[str, Any]) -> int:
+        normalized_values: list[str] = []
+        for item in result.get("unit_wise_summaries", []):
+            if isinstance(item, UnitSummary) and item.summary != self.NOT_AVAILABLE:
+                normalized_values.append(self._strip_citations(item.summary).lower())
+        for item in result.get("topic_wise_notes", []):
+            if isinstance(item, TopicNote) and item.notes != self.NOT_AVAILABLE:
+                normalized_values.append(self._strip_citations(item.notes).lower())
+        duplicate_count = len(normalized_values) - len(set(normalized_values))
+        return max(0, min(3, duplicate_count))
+
+    def _should_retry_underfilled_result(
+        self,
+        result: dict[str, Any],
+        options: GenerationOptions,
+    ) -> bool:
+        minimum_score = 4 if options.custom_prompt.strip() else 3
+        return self._result_score(result, options) < minimum_score
 
     def _extract_payload_from_response(self, response: Any) -> dict[str, Any] | None:
         parsed_payload = self._extract_parsed_payload(response)
@@ -437,21 +916,21 @@ Return strict JSON matching this schema exactly:
         compact_prompt = (
             f"{user_prompt}\n\n"
             "Compact regeneration constraints:\n"
-            "- summary_notes: at most 320 words with citations and full document coverage.\n"
-            "- unit_wise_summaries: 6 to 10 items in document order; each summary <= 100 words with citations.\n"
-            "- key_concepts: at most 14 concise phrases.\n"
-            "- topic_wise_notes: at most 10 topics; each notes <= 90 words with citation.\n"
-            "- flashcards: at most 12 items; each answer <= 75 words with citation and bloom_level.\n"
-            "- qa_sets: at most 12 items; each answer <= 90 words with citation and bloom_level.\n"
-            "- viva_questions: at most 8 items.\n"
-            "- difficulty_explanations: 3 items only; each <= 100 words with citation.\n"
+            "- summary_notes: at most 220 words with citations and full document coverage.\n"
+            "- unit_wise_summaries: 4 to 6 items in document order; each summary <= 70 words with citations and 1 to 2 key_points.\n"
+            "- key_concepts: at most 10 concise phrases.\n"
+            "- topic_wise_notes: at most 6 topics; each notes <= 60 words with citation.\n"
+            "- flashcards: at most 6 items; each answer <= 45 words with citation and bloom_level.\n"
+            "- qa_sets: at most 6 items; each answer <= 55 words with citation and bloom_level.\n"
+            "- viva_questions: at most 5 items.\n"
+            "- difficulty_explanations: 3 items only; each <= 70 words with citation.\n"
             "Return strict JSON only."
         )
 
         compact_config = self._build_generation_config(
             system_prompt=system_prompt,
             options=options,
-            max_output_tokens_override=4200,
+            max_output_tokens_override=3200,
             temperature_override=0.0,
             top_p_override=0.8,
         )
@@ -483,7 +962,7 @@ Return strict JSON matching this schema exactly:
         config = self._build_generation_config(
             system_prompt=system_prompt,
             options=options,
-            max_output_tokens_override=4200,
+            max_output_tokens_override=3200,
             temperature_override=0.0,
             top_p_override=0.82,
             use_response_schema=False,
@@ -1424,6 +1903,31 @@ Return strict JSON matching this schema exactly:
             result["unit_wise_summaries"] = generated_units[:12]
             unit_items = generated_units[:12]
 
+        topic_lookup: dict[str, TopicNote] = {}
+        for topic_item in topic_items:
+            topic_key = self._normalize_question_key(topic_item.topic)
+            if topic_key and topic_item.notes != self.NOT_AVAILABLE:
+                topic_lookup[topic_key] = topic_item
+
+        for unit_item in unit_items:
+            if unit_item.summary != self.NOT_AVAILABLE:
+                continue
+            unit_key = self._normalize_question_key(unit_item.unit_title)
+            topic_match = topic_lookup.get(unit_key)
+            if topic_match is None:
+                for topic_key, candidate in topic_lookup.items():
+                    common_terms = set(unit_key.split()) & set(topic_key.split())
+                    if len(common_terms) >= 2:
+                        topic_match = candidate
+                        break
+            if topic_match is None:
+                continue
+            unit_item.summary = self._truncate_text(topic_match.notes, 520)
+            if not unit_item.key_points:
+                unit_item.key_points = [self._truncate_text(topic_match.notes, 240)]
+        if unit_items:
+            result["unit_wise_summaries"] = unit_items
+
         summary_text = str(result.get("summary_notes", "") or "").strip()
         if summary_text == self.NOT_AVAILABLE and topic_note_texts:
             result["summary_notes"] = self._truncate_text(
@@ -1444,28 +1948,6 @@ Return strict JSON matching this schema exactly:
                 result["summary_notes"] = self._truncate_text(unit_based_summary, 1700)
                 summary_text = result["summary_notes"]
 
-        flashcards = [
-            card
-            for card in result.get("flashcards", [])
-            if isinstance(card, Flashcard) and card.answer != self.NOT_AVAILABLE
-        ]
-        fallback_answers = [card.answer for card in flashcards]
-
-        qa_answer_pool = [
-            item.answer
-            for item in result.get("qa_sets", [])
-            if isinstance(item, QAItem) and item.answer != self.NOT_AVAILABLE
-        ]
-        fallback_answers.extend(qa_answer_pool)
-        fallback_answers.extend(topic_note_texts)
-
-        if not fallback_answers:
-            summary_seed_for_cards = str(result.get("summary_notes", "") or "").strip()
-            if summary_seed_for_cards and summary_seed_for_cards != self.NOT_AVAILABLE:
-                fallback_answers.append(
-                    self._truncate_text(summary_seed_for_cards, 320)
-                )
-
         flashcard_items = [
             card for card in result.get("flashcards", []) if isinstance(card, Flashcard)
         ]
@@ -1473,22 +1955,6 @@ Return strict JSON matching this schema exactly:
         for index, card in enumerate(flashcard_items):
             if card.bloom_level not in bloom_levels:
                 card.bloom_level = bloom_levels[index % len(bloom_levels)]
-        replacement_index = 0
-        for card in flashcard_items:
-            if card.answer != self.NOT_AVAILABLE:
-                continue
-            if not fallback_answers:
-                break
-            card.answer = self._truncate_text(
-                fallback_answers[replacement_index % len(fallback_answers)],
-                320,
-            )
-            replacement_index += 1
-
-        fallback_answers = [
-            card.answer for card in flashcard_items if card.answer != self.NOT_AVAILABLE
-        ]
-        answer_index = 0
 
         qa_items = [
             item for item in result.get("qa_sets", []) if isinstance(item, QAItem)
@@ -1496,14 +1962,6 @@ Return strict JSON matching this schema exactly:
         for index, qa_item in enumerate(qa_items):
             if qa_item.bloom_level not in bloom_levels:
                 qa_item.bloom_level = bloom_levels[index % len(bloom_levels)]
-            if not isinstance(qa_item, QAItem):
-                continue
-            if qa_item.answer != self.NOT_AVAILABLE:
-                continue
-            if answer_index >= len(fallback_answers):
-                break
-            qa_item.answer = self._truncate_text(fallback_answers[answer_index], 320)
-            answer_index += 1
 
         summary_after = str(result.get("summary_notes", "") or "").strip()
         summary_seed = (
@@ -1557,7 +2015,12 @@ Return strict JSON matching this schema exactly:
 
         return result
 
-    def _build_fallback_output(self, context: str, reason: str) -> dict[str, Any]:
+    def _build_fallback_output(
+        self,
+        context: str,
+        reason: str,
+        focus_text: str = "",
+    ) -> dict[str, Any]:
         logger.warning("Using grounded fallback generation path: %s", reason)
 
         context_blocks = self._parse_context_blocks(context)
@@ -1582,7 +2045,22 @@ Return strict JSON matching this schema exactly:
             for block in context_blocks
             if not self._is_noisy_text(str(block.get("text", "")))
         ]
-        selected_blocks = (quality_blocks or context_blocks)[:14]
+        candidate_blocks = quality_blocks or context_blocks
+        focus_terms = {
+            token
+            for token in re.findall(r"[A-Za-z0-9][A-Za-z0-9\-.]{1,}", focus_text.lower())
+            if token not in self.STOP_WORDS
+        }
+        if focus_terms:
+            candidate_blocks = sorted(
+                candidate_blocks,
+                key=lambda block: (
+                    len(focus_terms & set(block.get("terms", set()))),
+                    len(str(block.get("text", ""))),
+                ),
+                reverse=True,
+            )
+        selected_blocks = candidate_blocks[:14]
 
         key_concepts = self._extract_key_phrases(selected_blocks, limit=10)
 
