@@ -1,5 +1,6 @@
 from functools import lru_cache
 
+from app.core.environment import clear_broken_local_proxy_settings
 from app.core.config import get_settings
 from app.services.generation_service import GeminiGenerationService
 from app.services.history_service import HistoryService
@@ -9,6 +10,7 @@ from app.services.study_pipeline import StudyGuidePipeline
 
 class ServiceContainer:
     def __init__(self) -> None:
+        clear_broken_local_proxy_settings()
         self.settings = get_settings()
         self.rag_service = RAGService(
             vector_root=self.settings.vector_db_path,

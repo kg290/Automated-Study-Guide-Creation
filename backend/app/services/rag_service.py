@@ -19,10 +19,14 @@ class RAGService:
         self.retrieval_k = retrieval_k
         self.vector_root.mkdir(parents=True, exist_ok=True)
         self.chroma_settings = ChromaSettings(anonymized_telemetry=False)
+        self._embeddings: HuggingFaceEmbeddings | None = None
 
-        self.embeddings = HuggingFaceEmbeddings(
-            model_name="sentence-transformers/all-MiniLM-L6-v2"
-        )
+    def _get_embeddings(self) -> HuggingFaceEmbeddings:
+        if self._embeddings is None:
+            self._embeddings = HuggingFaceEmbeddings(
+                model_name="sentence-transformers/all-MiniLM-L6-v2"
+            )
+        return self._embeddings
 
     def _collection_directory(self, session_id: str) -> Path:
         return self.vector_root / session_id
@@ -43,7 +47,7 @@ class RAGService:
 
         vector_store = Chroma.from_texts(
             texts=chunks,
-            embedding=self.embeddings,
+            embedding=self._get_embeddings(),
             metadatas=metadata,
             persist_directory=str(persist_directory),
             collection_name="study_material",
@@ -59,7 +63,7 @@ class RAGService:
             raise FileNotFoundError("Vector store not found for this session.")
 
         return Chroma(
-            embedding_function=self.embeddings,
+            embedding_function=self._get_embeddings(),
             persist_directory=str(persist_directory),
             collection_name="study_material",
             client_settings=self.chroma_settings,

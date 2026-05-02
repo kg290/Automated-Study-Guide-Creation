@@ -1,55 +1,81 @@
-# Generative AI Agent for Automated Study Guide Creation
+# Automated Study Guide Creation
 
-Full-stack capstone project that converts uploaded PDF/DOCX academic material into structured study assets using OCR, RAG, and Gemini.
+Generative AI study-guide platform that turns uploaded academic material into structured revision outputs for students and professors. The system extracts content from PDFs and DOCX files, organizes the material, retrieves relevant context, and generates study assets such as summaries, unit guides, concept cards, Q&A, viva prompts, and difficulty-based explanations.
 
-## What This Project Delivers
+## Problem Statement
 
-- Multi-file upload for PDF and DOCX documents.
-- Smart extraction pipeline:
-  - DOCX direct parsing.
-  - PDF text extraction using PyMuPDF.
-  - Automatic low-text PDF detection and OCR fallback using Google Vision API.
-- Content processing:
-  - Text cleaning.
-  - Header/footer repetition reduction.
-  - Chunking for retrieval.
-- RAG architecture:
-  - Embeddings via sentence-transformers (all-MiniLM-L6-v2).
-  - Vector storage in ChromaDB.
-  - Semantic retrieval before generation.
-- Gemini-powered study outputs grounded in uploaded context:
-  - Summary notes
-  - Key concepts
-  - Topic-wise notes
+Professors often spend significant time preparing concise study guides and summaries for students from large sets of course materials. This project aims to automate that workflow by reading educational content and producing a structured study guide within minutes.
+
+## What The Project Does
+
+- Accepts one or more uploaded `PDF` or `DOCX` files
+- Extracts text using direct parsing first
+- Applies OCR for low-text and mixed-content PDF pages
+- Cleans and chunks the source material for retrieval
+- Builds a retrieval context using embeddings and ChromaDB
+- Generates grounded study outputs from the uploaded material
+- Stores sessions in history for revisit and regeneration
+
+## Generated Outputs
+
+- Summary notes
+- Unit and chapter guide
+- Key concepts
+- Topic-wise notes
+- Flashcards as concept-detail revision cards
+- Q&A as explanation-oriented question-answer pairs
+- Viva questions
+- Difficulty explanations:
+  - Beginner
+  - Intermediate
+  - Advanced
+
+## Current Product Experience
+
+### Frontend
+
+- Light notebook-style dashboard
+- Dedicated processing page with active pipeline stages
+- Results workspace with top-level tabs:
+  - Summary
   - Flashcards
-  - Q&A sets
-  - Viva questions
-  - Beginner/intermediate/advanced explanations
-- Modern Next.js dashboard experience:
-  - Landing page
-  - Upload dashboard
-  - Processing status page
-  - Results page with tabs and copy/download actions
-  - History page with saved sessions (SQLite-backed)
+  - Q&A
+- Animated study-card presentation for Flashcards and Q&A
+- Copy and markdown download actions
+- Session history view
+
+### Backend
+
+- FastAPI service
+- PDF extraction with PyMuPDF
+- DOCX extraction with `python-docx`
+- OCR fallback with Google Cloud Vision
+- Embeddings with `sentence-transformers/all-MiniLM-L6-v2`
+- Vector retrieval using ChromaDB
+- Gemini-powered study-guide generation
+- SQLite-backed history persistence
 
 ## Tech Stack
 
 ### Frontend
-- Next.js (React, TypeScript)
+
+- Next.js
+- React
+- TypeScript
 - Framer Motion
-- Axios
 - React Dropzone
+- Lucide React
 
 ### Backend
+
 - Python
 - FastAPI
-- LangChain
+- Gemini API
 - ChromaDB
 - sentence-transformers
-- Gemini API
-- Google Cloud Vision API
 - PyMuPDF
 - python-docx
+- Google Cloud Vision API
 - SQLite
 
 ## Project Structure
@@ -58,7 +84,7 @@ Full-stack capstone project that converts uploaded PDF/DOCX academic material in
 .
 ├── backend
 │   ├── app
-│   │   ├── api/v1/endpoints
+│   │   ├── api
 │   │   ├── core
 │   │   ├── models
 │   │   └── services
@@ -75,11 +101,9 @@ Full-stack capstone project that converts uploaded PDF/DOCX academic material in
 └── README.md
 ```
 
-## Setup Instructions
+## Setup
 
-## 1. Backend Setup
-
-Open terminal in project root and run:
+### Backend
 
 ```powershell
 cd backend
@@ -90,25 +114,18 @@ pip install -r requirements.txt
 copy .env.example .env
 ```
 
-Edit backend .env with your keys and paths:
+Set the required backend environment variables in `.env`:
 
-- GEMINI_API_KEY=your_gemini_api_key
-- GOOGLE_APPLICATION_CREDENTIALS=absolute_or_relative_path_to_service_account_json
+- `GEMINI_API_KEY`
+- `GOOGLE_APPLICATION_CREDENTIALS`
 
-Run backend:
+Run the backend:
 
 ```powershell
-uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
 ```
 
-Backend base URL:
-
-- http://localhost:8000
-- API base: http://localhost:8000/api/v1
-
-## 2. Frontend Setup
-
-In a second terminal:
+### Frontend
 
 ```powershell
 cd frontend
@@ -116,51 +133,37 @@ npm install
 copy .env.example .env
 ```
 
-Ensure frontend .env points to backend:
+Set:
 
-- NEXT_PUBLIC_API_BASE_URL=http://localhost:8000/api/v1
+- `NEXT_PUBLIC_API_BASE_URL=http://127.0.0.1:8000/api/v1`
 
-Run frontend:
+Run the frontend:
 
 ```powershell
 npm run dev
 ```
 
-Frontend URL:
-
-- http://localhost:3000
-
-## Environment and Security Notes
-
-- API keys are read from backend environment variables only.
-- Never expose Gemini or Google credentials in frontend code.
-- Keep .env and service account files out of version control.
-- Existing .gitignore already excludes common secret/runtime files.
-
 ## Main API Endpoints
 
-- GET /api/v1/health
-- POST /api/v1/study-guides/generate
-- GET /api/v1/study-guides/jobs/{job_id}
-- POST /api/v1/study-guides/sessions/{session_id}/regenerate
-- GET /api/v1/history
-- GET /api/v1/history/{session_id}
+- `GET /api/v1/health`
+- `POST /api/v1/study-guides/generate`
+- `GET /api/v1/study-guides/jobs/{job_id}`
+- `POST /api/v1/study-guides/sessions/{session_id}/regenerate`
+- `GET /api/v1/history`
+- `GET /api/v1/history/{session_id}`
 
-## User Flow
+## Typical Flow
 
-1. Upload one or many PDF/DOCX files.
-2. System extracts text and runs OCR for low-text PDFs.
-3. Content is cleaned and chunked.
-4. Chunks are embedded and stored in ChromaDB.
-5. Relevant chunks are retrieved based on selected output type.
-6. Gemini generates source-grounded study outputs.
-7. Results are displayed in tabs with copy/download support.
-8. Sessions are stored in SQLite for history revisit and regeneration.
+1. Upload source files
+2. Extract and OCR text where needed
+3. Clean and chunk the content
+4. Build embeddings and retrieval context
+5. Generate study outputs
+6. Review outputs in Summary, Flashcards, and Q&A tabs
+7. Revisit or regenerate from History
 
-## Optional Premium Extensions (Roadmap)
+## Notes
 
-- Export generated study guide as PDF.
-- MCQ generator.
-- Chat with uploaded notes.
-- Unit-wise generation controls.
-- Role-based user accounts and cloud storage.
+- API keys are kept on the backend only
+- Uploaded study material should stay grounded to the session
+- Old saved sessions preserve the output from the time they were generated, so regeneration is required to see newer generation logic

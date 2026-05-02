@@ -53,9 +53,24 @@ class StudyGuidePipeline:
                 chunk_size=self.settings.chunk_size,
                 chunk_overlap=self.settings.chunk_overlap,
             )
+            sanitized_chunks = [
+                self._prepare_chunk_for_generation(chunk)
+                for chunk in chunks
+            ]
+            paired_chunks = [
+                (chunk, index)
+                for index, chunk in enumerate(sanitized_chunks)
+                if self._is_generation_worthy_chunk(chunk)
+            ]
+            if paired_chunks:
+                chunks = [chunk for chunk, _ in paired_chunks]
+            else:
+                chunks = [chunk for chunk in sanitized_chunks if chunk.strip()]
             if not chunks:
                 logger.warning("No usable chunks produced for file %s", extracted.file_name)
                 continue
+
+            section_titles = self._assign_section_titles(chunks, extracted.file_name)
 
             source_documents.append(extracted.file_name)
 
@@ -66,6 +81,7 @@ class StudyGuidePipeline:
                         "source": extracted.file_name,
                         "chunk_index": index,
                         "used_ocr": extracted.used_ocr,
+                        "section_title": section_titles[index] if index < len(section_titles) else f"Section {index + 1}",
                     }
                 )
 
@@ -82,10 +98,10 @@ class StudyGuidePipeline:
         options: GenerationOptions,
         source_documents: list[str],
     ) -> str:
-        generation_context_budget = min(self.settings.context_max_chars, 12000)
-        outline_budget = min(1800, max(900, generation_context_budget // 7))
-        evidence_budget = max(3500, generation_context_budget - outline_budget)
-        coverage_context_budget = min(max(4200, evidence_budget // 2), 6500)
+        generation_context_budget = min(self.settings.context_max_chars, 22000)
+        outline_budget = min(2600, max(1100, generation_context_budget // 8))
+        evidence_budget = max(5200, generation_context_budget - outline_budget)
+        coverage_context_budget = min(max(5200, evidence_budget // 2), 9000)
 
         coverage_context = self._build_document_coverage_context(
             chunks=all_chunks,
@@ -106,13 +122,13 @@ class StudyGuidePipeline:
             chunks=all_chunks,
             metadata=all_metadata,
             focus_text=options.custom_prompt,
-            max_chars=min(2600, max(1200, evidence_budget // 3)),
+            max_chars=min(4200, max(1600, evidence_budget // 3)),
         )
 
         # Small documents fit comfortably in context. Avoid embedding/retrieval work and
         # give Gemini the whole cleaned document, which also makes custom focus prompts
         # much more reliable for exact table/section references.
-        if len(all_chunks) <= max(8, self.settings.retrieval_k + 2):
+        if len(all_chunks) <= max(10, self.settings.retrieval_k + 3):
             small_doc_evidence = self._merge_multiple_context_bundles(
                 [focus_context, compact_full_context, coverage_context],
                 max_chars=evidence_budget,
@@ -131,7 +147,11 @@ class StudyGuidePipeline:
                     metadata=all_metadata,
                 )
 
-                retrieval_queries = self._build_retrieval_queries(options, source_documents)
+                retrieval_queries = self._build_retrieval_queries(
+                    options,
+                    source_documents,
+                    metadata=all_metadata,
+                )
                 retrieval_k = self.settings.retrieval_k
                 if "unit_summaries" in options.output_types:
                     retrieval_k = max(retrieval_k, 10)
@@ -190,14 +210,21 @@ class StudyGuidePipeline:
 
             jobs.update_job(
                 job_id,
-                progress=50,
-                stage="embedding",
-                message="Preparing grounded context across the uploaded material.",
+                progress=35,
+                stage="structuring",
+                message="Identifying document sections and preparing clean study blocks.",
             )
 
             jobs.update_job(
                 job_id,
-                progress=70,
+                progress=55,
+                stage="embedding",
+                message="Building grounded retrieval support for the uploaded material.",
+            )
+
+            jobs.update_job(
+                job_id,
+                progress=68,
                 stage="retrieving",
                 message="Selecting the most representative passages for generation.",
             )
@@ -212,15 +239,29 @@ class StudyGuidePipeline:
 
             jobs.update_job(
                 job_id,
-                progress=85,
+                progress=78,
+                stage="mapping",
+                message="Combining section map and grounded evidence for generation.",
+            )
+
+            jobs.update_job(
+                job_id,
+                progress=86,
                 stage="generating",
-                message="Generating structured study material with Gemini.",
+                message="Generating study guide sections and learning artifacts.",
             )
 
             result = self.generation_service.generate_from_context(
                 context=context_bundle,
                 options=options,
                 source_documents=source_documents,
+            )
+
+            jobs.update_job(
+                job_id,
+                progress=94,
+                stage="validating",
+                message="Validating generated outputs and preparing final result.",
             )
 
             self.history_service.save_session(
@@ -251,6 +292,7 @@ class StudyGuidePipeline:
         self,
         options: GenerationOptions,
         source_documents: list[str],
+        metadata: list[dict] | None = None,
     ) -> list[str]:
         topical_intents: list[str] = []
 
@@ -311,6 +353,14 @@ class StudyGuidePipeline:
 
         queries = [*document_understanding_queries, output_focused_query]
 
+        section_titles = self._extract_section_titles_from_metadata(metadata or [])
+        if section_titles:
+            preview_titles = "; ".join(section_titles[:8])
+            queries.append(
+                "Use the document structure and these inferred sections when retrieving evidence: "
+                + preview_titles
+            )
+
         if options.custom_prompt.strip():
             focus = options.custom_prompt.strip()
             queries.extend(
@@ -329,6 +379,119 @@ class StudyGuidePipeline:
 
     def _normalize_line(self, line: str) -> str:
         return re.sub(r"\s+", " ", (line or "").strip())
+
+    def _prepare_chunk_for_generation(self, chunk: str) -> str:
+        normalized = (chunk or "").replace("**", "").replace("`", "")
+        normalized = re.sub(r"\bTable of Contents\b.*", "", normalized, flags=re.IGNORECASE)
+        lines = [self._normalize_line(line) for line in normalized.splitlines()]
+        cleaned_lines: list[str] = []
+
+        for line in lines:
+            if not line:
+                continue
+            if self._looks_like_code_line(line):
+                continue
+            fragments: list[str] = []
+            for fragment in re.split(r"(?<=[.!?])\s+|\s{2,}|;\s+", line):
+                candidate = self._normalize_line(fragment)
+                if not candidate:
+                    continue
+                if self._looks_like_code_line(candidate):
+                    continue
+                if self._looks_like_inline_noise(candidate):
+                    continue
+                fragments.append(candidate)
+            if fragments:
+                cleaned_lines.append(" ".join(fragments))
+
+        if cleaned_lines:
+            return "\n".join(cleaned_lines).strip()
+        return self._normalize_line(normalized)
+
+    def _looks_like_code_line(self, line: str) -> bool:
+        compact = self._normalize_line(line)
+        if not compact:
+            return False
+
+        code_keywords = (
+            "class ",
+            "public:",
+            "private:",
+            "protected:",
+            "return ",
+            "void ",
+            "int ",
+            "bool ",
+            "vector",
+            "string ",
+            "nullptr",
+            "push(",
+            "pop(",
+            "size()",
+            "for(",
+            "while(",
+            "if(",
+            "else",
+            "node->",
+            "::",
+        )
+        signal_count = sum(1 for token in code_keywords if token in compact)
+        punctuation_signals = sum(compact.count(symbol) for symbol in (";", "{", "}", "->", "::"))
+        bracket_pairs = compact.count("(") + compact.count(")") + compact.count("[") + compact.count("]")
+        natural_words = re.findall(r"[A-Za-z]{3,}", compact)
+        identifiers = re.findall(r"[A-Za-z_][A-Za-z0-9_]*", compact)
+        natural_ratio = len(natural_words) / max(1, len(identifiers))
+
+        if signal_count >= 2:
+            return True
+        if punctuation_signals >= 3 and bracket_pairs >= 2:
+            return True
+        if compact.count("=") >= 2 and bracket_pairs >= 2:
+            return True
+        if natural_ratio < 0.34 and (punctuation_signals >= 2 or bracket_pairs >= 4):
+            return True
+        return False
+
+    def _is_generation_worthy_chunk(self, chunk: str) -> bool:
+        compact = self._normalize_line(chunk)
+        if not compact:
+            return False
+        if len(compact) < 80:
+            return False
+        tokens = re.findall(r"[A-Za-z0-9\-]+", compact)
+        alpha = [token for token in tokens if re.search(r"[A-Za-z]", token)]
+        if len(alpha) < 14:
+            return False
+        long_alpha = [token for token in alpha if len(token) >= 4]
+        if len(long_alpha) / max(1, len(alpha)) < 0.4:
+            return False
+        if self._looks_like_code_line(compact):
+            return False
+        if self._looks_like_inline_noise(compact):
+            return False
+        return True
+
+    def _looks_like_inline_noise(self, text: str) -> bool:
+        compact = self._normalize_line(text)
+        if not compact:
+            return False
+        slash_hits = compact.count("/") + compact.count("|")
+        digit_hits = len(re.findall(r"\b\d+\b", compact))
+        codeish = len(re.findall(r"\b[a-z]+[A-Z][A-Za-z0-9_]*\b|\b[A-Za-z_]+::[A-Za-z_]+\b", compact))
+        verb_hits = len(
+            re.findall(
+                r"\b(is|are|uses|explains|shows|describes|maintains|works|processes|stores|computes|helps|allows|supports|means)\b",
+                compact,
+                flags=re.IGNORECASE,
+            )
+        )
+        if slash_hits >= 3 and verb_hits == 0:
+            return True
+        if digit_hits >= 6 and verb_hits == 0 and len(compact.split()) < 50:
+            return True
+        if codeish >= 2 and verb_hits == 0:
+            return True
+        return False
 
     def _looks_like_heading(self, line: str) -> bool:
         cleaned = self._normalize_line(line)
@@ -395,6 +558,104 @@ class StudyGuidePipeline:
             return f"Section {chunk_index + 1}"
         return " ".join(title_tokens).strip(" -:;,.") or f"Section {chunk_index + 1}"
 
+    def _assign_section_titles(self, chunks: list[str], source_name: str) -> list[str]:
+        section_titles: list[str] = []
+        current_title = ""
+        source_title = self._humanize_source_title(source_name)
+
+        for chunk_index, chunk in enumerate(chunks):
+            inferred = self._sanitize_section_title(
+                self._infer_chunk_heading(chunk, chunk_index),
+                chunk_index=chunk_index,
+            )
+            if len(chunks) == 1 and not self._is_strong_section_title(inferred):
+                inferred = source_title or inferred
+            compact = " ".join(chunk.split()).strip()
+            if not compact:
+                section_titles.append(current_title or source_title or f"Section {chunk_index + 1}")
+                continue
+
+            if (
+                not current_title
+                or self._is_strong_section_title(inferred)
+                or self._section_titles_differ(inferred, current_title)
+            ):
+                current_title = inferred
+
+            section_titles.append(current_title or source_title or f"Section {chunk_index + 1}")
+
+        return section_titles
+
+    def _humanize_source_title(self, source_name: str) -> str:
+        title = Path(source_name).stem.replace("-", " ").replace("_", " ")
+        title = re.sub(r"\s+", " ", title).strip()
+        words = [word for word in title.split() if word]
+        if not words:
+            return ""
+        return " ".join(word.upper() if word.isupper() else word.capitalize() for word in words[:8]).strip()
+
+    def _sanitize_section_title(self, title: str, *, chunk_index: int) -> str:
+        cleaned = self._normalize_line(title)
+        cleaned = re.sub(r"^[\-\*\d\.\)\(:\s]+", "", cleaned)
+        cleaned = re.sub(r"[<>{}\[\]]", " ", cleaned)
+        cleaned = cleaned.strip(" -:;,")
+        words = cleaned.split()
+        if len(words) > 10:
+            cleaned = " ".join(words[:10]).strip(" -:;,")
+        if not cleaned:
+            return f"Section {chunk_index + 1}"
+        if len(cleaned) < 4:
+            return f"Section {chunk_index + 1}"
+        alpha_chars = [char for char in cleaned if char.isalpha()]
+        if not alpha_chars:
+            return f"Section {chunk_index + 1}"
+        punctuation_ratio = sum(1 for char in cleaned if not char.isalnum() and not char.isspace()) / max(1, len(cleaned))
+        if punctuation_ratio > 0.18:
+            return f"Section {chunk_index + 1}"
+        return cleaned
+
+    def _is_strong_section_title(self, title: str) -> bool:
+        cleaned = self._normalize_line(title)
+        if not cleaned:
+            return False
+        if re.match(r"^Section \d+$", cleaned, flags=re.IGNORECASE):
+            return False
+        if re.match(r"^(chapter|unit|module|section|topic|part)\b", cleaned, flags=re.IGNORECASE):
+            return True
+        words = cleaned.split()
+        if 2 <= len(words) <= 8:
+            title_like = sum(1 for word in words if word[:1].isupper())
+            return title_like / max(1, len(words)) >= 0.5
+        return False
+
+    def _section_titles_differ(self, title_a: str, title_b: str) -> bool:
+        a_terms = {
+            token.lower()
+            for token in re.findall(r"[A-Za-z0-9][A-Za-z0-9\-]{2,}", title_a)
+        }
+        b_terms = {
+            token.lower()
+            for token in re.findall(r"[A-Za-z0-9][A-Za-z0-9\-]{2,}", title_b)
+        }
+        if not a_terms or not b_terms:
+            return False
+        overlap = len(a_terms & b_terms)
+        return overlap / max(1, min(len(a_terms), len(b_terms))) < 0.5
+
+    def _extract_section_titles_from_metadata(self, metadata: list[dict]) -> list[str]:
+        titles: list[str] = []
+        seen: set[str] = set()
+        for item in metadata:
+            title = self._normalize_line(str(item.get("section_title", "") or ""))
+            if not title:
+                continue
+            key = title.lower()
+            if key in seen:
+                continue
+            seen.add(key)
+            titles.append(title)
+        return titles
+
     def _build_document_outline_guidance(
         self,
         chunks: list[str],
@@ -438,7 +699,10 @@ class StudyGuidePipeline:
 
             lines.append(f"Source: {source}")
             for ordinal, (chunk_index, content) in enumerate(sampled, start=1):
-                heading = self._infer_chunk_heading(content, chunk_index)
+                heading = self._sanitize_section_title(
+                    self._infer_chunk_heading(content, chunk_index),
+                    chunk_index=chunk_index,
+                )
                 summary = self._summarize_chunk_for_outline(content, max_chars=110)
                 lines.append(
                     f"- Unit candidate {ordinal} around chunk {chunk_index}: {heading} -> {summary}"
@@ -512,7 +776,9 @@ class StudyGuidePipeline:
                 or "uploaded_document"
             )
             chunk_index = str(chunk_metadata.get("chunk_index", "na")).strip() or "na"
-            block = f"[source:{source} | chunk:{chunk_index}]\n{content}"
+            section_title = self._normalize_line(str(chunk_metadata.get("section_title", "") or ""))
+            section_part = f" | section:{section_title}" if section_title else ""
+            block = f"[source:{source} | chunk:{chunk_index}{section_part}]\n{content}"
 
             separator_chars = 2 if context_blocks else 0
             projected = consumed_chars + separator_chars + len(block)
@@ -567,7 +833,16 @@ class StudyGuidePipeline:
                 sampled = [source_chunks[idx] for idx in sampled_indices]
 
             for chunk_index, content in sampled:
-                block = f"[source:{source} | chunk:{chunk_index}]\n{content}"
+                section_title = ""
+                for meta in metadata:
+                    if (
+                        str(meta.get("source", "")).strip() == source
+                        and int(meta.get("chunk_index", 0)) == chunk_index
+                    ):
+                        section_title = self._normalize_line(str(meta.get("section_title", "") or ""))
+                        break
+                section_part = f" | section:{section_title}" if section_title else ""
+                block = f"[source:{source} | chunk:{chunk_index}{section_part}]\n{content}"
                 separator_chars = 2 if selected_blocks else 0
                 projected = consumed_chars + separator_chars + len(block)
                 if projected > max_chars:

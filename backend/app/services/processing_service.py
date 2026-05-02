@@ -98,6 +98,53 @@ def _is_low_information_line(line: str) -> bool:
     return False
 
 
+def _looks_like_code_line(line: str) -> bool:
+    compact = _normalize_line(line)
+    if not compact:
+        return False
+
+    code_keywords = (
+        "class ",
+        "public:",
+        "private:",
+        "protected:",
+        "return ",
+        "void ",
+        "int ",
+        "bool ",
+        "vector",
+        "string ",
+        "nullptr",
+        "push(",
+        "pop(",
+        "size()",
+        "for(",
+        "while(",
+        "if(",
+        "else",
+        "node->",
+        "::",
+    )
+    signal_count = sum(1 for token in code_keywords if token in compact)
+    punctuation_signals = sum(compact.count(symbol) for symbol in (";", "{", "}", "->", "::"))
+    bracket_pairs = compact.count("(") + compact.count(")") + compact.count("[") + compact.count("]")
+
+    natural_words = re.findall(r"[A-Za-z]{3,}", compact)
+    identifier_words = re.findall(r"[A-Za-z_][A-Za-z0-9_]*", compact)
+    natural_ratio = len(natural_words) / max(1, len(identifier_words))
+
+    if signal_count >= 2:
+        return True
+    if punctuation_signals >= 3 and bracket_pairs >= 2:
+        return True
+    if compact.count("=") >= 2 and bracket_pairs >= 2:
+        return True
+    if natural_ratio < 0.34 and (punctuation_signals >= 2 or bracket_pairs >= 4):
+        return True
+
+    return False
+
+
 def clean_extracted_text(raw_text: str) -> str:
     if not raw_text:
         return ""
@@ -131,8 +178,12 @@ def clean_extracted_text(raw_text: str) -> str:
         if _is_low_information_line(compact_line):
             continue
 
+        if _looks_like_code_line(compact_line):
+            continue
+
         # Keep most punctuation useful for semantics, remove odd OCR artifacts.
         compact_line = re.sub(r"[^\w\s\.,;:!\?\-\(\)\[\]/%+=]", "", compact_line)
+        compact_line = compact_line.replace("**", "").replace("`", "")
         cleaned_lines.append(compact_line)
 
     text = "\n".join(cleaned_lines)

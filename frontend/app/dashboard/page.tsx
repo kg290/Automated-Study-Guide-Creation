@@ -35,11 +35,6 @@ export default function DashboardPage() {
       setError("Choose at least one output type.");
       return;
     }
-    if (bloomLevels.length === 0) {
-      setError("Choose at least one Bloom taxonomy level.");
-      return;
-    }
-
     setError("");
     setSubmitting(true);
     setUploadProgress(0);
@@ -93,26 +88,24 @@ export default function DashboardPage() {
             <Layers3 size={15} />
             {outputTypes.length} outputs selected
           </span>
-          <span className="dashboard-pill">
-            <Sparkles size={15} />
-            {bloomLevels.length} Bloom levels active
-          </span>
         </div>
       </motion.section>
 
       <form className="page-stack" onSubmit={handleSubmit}>
-        <FileDropzone files={files} onFilesChange={setFiles} />
+        <section className="dashboard-workspace">
+          <FileDropzone files={files} onFilesChange={setFiles} />
 
-        <OutputConfigurator
-          outputTypes={outputTypes}
-          onOutputTypesChange={setOutputTypes}
-          difficultyModes={difficultyModes}
-          onDifficultyModesChange={setDifficultyModes}
-          bloomLevels={bloomLevels}
-          onBloomLevelsChange={setBloomLevels}
-          customPrompt={customPrompt}
-          onCustomPromptChange={setCustomPrompt}
-        />
+          <OutputConfigurator
+            outputTypes={outputTypes}
+            onOutputTypesChange={setOutputTypes}
+            difficultyModes={difficultyModes}
+            onDifficultyModesChange={setDifficultyModes}
+            bloomLevels={bloomLevels}
+            onBloomLevelsChange={setBloomLevels}
+            customPrompt={customPrompt}
+            onCustomPromptChange={setCustomPrompt}
+          />
+        </section>
 
         <motion.section
           className="glass-card launch-card"

@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { BookOpenText, Files, Layers3 } from "lucide-react";
+import { BookOpenText, Files, Layers3, Orbit, Sparkles } from "lucide-react";
 
 import { StudyGuideTabs } from "@/components/StudyGuideTabs";
 import { getJobStatus, regenerateSession } from "@/lib/api";
@@ -127,14 +127,25 @@ export default function ResultsPage() {
   return (
     <div className="page-stack">
       <motion.section
-        className="page-title-block"
+        className="page-title-block notebook-hero"
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4, ease: "easeOut" }}
       >
         <div>
+          <span className="eyebrow">Studio Notebook</span>
           <h1>Generated Study Guide</h1>
-          <p>Output grounded in your uploaded documents through retrieval-augmented generation.</p>
+          <p>Notebook-style study output grounded in the uploaded sources, shaped into summaries, cards, and revision prompts.</p>
+        </div>
+        <div className="dashboard-pills">
+          <span className="dashboard-pill">
+            <Sparkles size={15} />
+            Retrieval grounded
+          </span>
+          <span className="dashboard-pill">
+            <Orbit size={15} />
+            Study studio ready
+          </span>
         </div>
       </motion.section>
 
@@ -156,14 +167,16 @@ export default function ResultsPage() {
         </div>
       </section>
 
-      <section className="info-banner">
-        <strong>Source Files:</strong> {job.result.source_documents.join(", ") || "Unknown source"}
-      </section>
-      <section className="info-banner info-banner-strong">
-        <strong>Grounding:</strong> Responses are constrained to retrieved chunks from the uploaded session only.
+      <section className="toolbar-strip">
+        <div className="info-banner">
+          <strong>Source Files:</strong> {job.result.source_documents.join(", ") || "Unknown source"}
+        </div>
+        <div className="info-banner info-banner-strong">
+          <strong>Grounding:</strong> Responses are constrained to retrieved chunks from the uploaded session only.
+        </div>
       </section>
 
-      <section className="submit-row">
+      <section className="submit-row toolbar-actions">
         <button type="button" className="primary-button" onClick={handleRegenerate} disabled={regenerating}>
           {regenerating ? "Regenerating..." : "Regenerate Outputs"}
         </button>

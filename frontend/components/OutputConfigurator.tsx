@@ -1,9 +1,9 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { BrainCircuit, Layers3, Wand2 } from "lucide-react";
+import { CheckCircle2, Layers3, Wand2 } from "lucide-react";
 
-import { BLOOM_OPTIONS, DIFFICULTY_OPTIONS, OUTPUT_OPTIONS } from "@/lib/constants";
+import { DIFFICULTY_OPTIONS, OUTPUT_OPTIONS } from "@/lib/constants";
 
 interface OutputConfiguratorProps {
   outputTypes: string[];
@@ -21,8 +21,6 @@ export function OutputConfigurator({
   onOutputTypesChange,
   difficultyModes,
   onDifficultyModesChange,
-  bloomLevels,
-  onBloomLevelsChange,
   customPrompt,
   onCustomPromptChange,
 }: OutputConfiguratorProps) {
@@ -40,14 +38,6 @@ export function OutputConfigurator({
       return;
     }
     onDifficultyModesChange([...difficultyModes, id]);
-  };
-
-  const toggleBloomLevel = (id: "remember" | "understand" | "apply" | "analyze") => {
-    if (bloomLevels.includes(id)) {
-      onBloomLevelsChange(bloomLevels.filter((item) => item !== id));
-      return;
-    }
-    onBloomLevelsChange([...bloomLevels, id]);
   };
 
   return (
@@ -69,10 +59,6 @@ export function OutputConfigurator({
           <Wand2 size={14} />
           {difficultyModes.length} difficulty tracks
         </span>
-        <span className="selection-chip">
-          <BrainCircuit size={14} />
-          {bloomLevels.length} Bloom levels
-        </span>
       </div>
 
       <div className="grounding-banner">
@@ -89,9 +75,14 @@ export function OutputConfigurator({
               type="button"
               onClick={() => toggleOutputType(option.id)}
               className={`pill-option ${active ? "pill-option-active" : ""}`}
+              aria-pressed={active}
               whileHover={{ y: -3, scale: 1.01 }}
               whileTap={{ scale: 0.985 }}
             >
+              <span className={`pill-option-status ${active ? "pill-option-status-active" : ""}`}>
+                <CheckCircle2 size={14} />
+                {active ? "Selected" : "Tap to select"}
+              </span>
               <strong>{option.label}</strong>
               <span>{option.description}</span>
             </motion.button>
@@ -108,29 +99,12 @@ export function OutputConfigurator({
               key={option.id}
               type="button"
               className={`chip-option ${active ? "chip-option-active" : ""}`}
+              aria-pressed={active}
               onClick={() => toggleDifficultyMode(option.id)}
               whileHover={{ y: -2 }}
               whileTap={{ scale: 0.97 }}
             >
-              {option.label}
-            </motion.button>
-          );
-        })}
-      </div>
-
-      <h4 className="minor-heading">Bloom Taxonomy for Q&A and Flashcards</h4>
-      <div className="option-row">
-        {BLOOM_OPTIONS.map((option) => {
-          const active = bloomLevels.includes(option.id);
-          return (
-            <motion.button
-              key={option.id}
-              type="button"
-              className={`chip-option ${active ? "chip-option-active" : ""}`}
-              onClick={() => toggleBloomLevel(option.id)}
-              whileHover={{ y: -2 }}
-              whileTap={{ scale: 0.97 }}
-            >
+              {active ? <CheckCircle2 size={14} /> : null}
               {option.label}
             </motion.button>
           );

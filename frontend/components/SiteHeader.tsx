@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Sparkles } from "lucide-react";
+import { History, LayoutDashboard, Sparkles } from "lucide-react";
 
 export function SiteHeader() {
   return (
@@ -11,8 +11,14 @@ export function SiteHeader() {
         </Link>
 
         <nav className="nav-links">
-          <Link href="/dashboard">Dashboard</Link>
-          <Link href="/history">History</Link>
+          <Link href="/dashboard" className="nav-pill">
+            <LayoutDashboard size={14} />
+            Dashboard
+          </Link>
+          <Link href="/history" className="nav-pill">
+            <History size={14} />
+            History
+          </Link>
         </nav>
       </div>
     </header>

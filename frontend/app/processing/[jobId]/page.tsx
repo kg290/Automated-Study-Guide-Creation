@@ -8,6 +8,15 @@ import { ProcessingTimeline } from "@/components/ProcessingTimeline";
 import { getJobStatus } from "@/lib/api";
 import { JobStatusResponse } from "@/lib/types";
 
+function formatElapsed(seconds: number): string {
+  const minutes = Math.floor(seconds / 60);
+  const remaining = seconds % 60;
+  if (minutes <= 0) {
+    return `${remaining}s`;
+  }
+  return `${minutes}m ${remaining.toString().padStart(2, "0")}s`;
+}
+
 export default function ProcessingPage() {
   const params = useParams<{ jobId: string }>();
   const router = useRouter();
@@ -79,9 +88,10 @@ export default function ProcessingPage() {
         stage={job?.stage || "queued"}
         progress={job?.progress || 0}
         message={job?.message || "Initializing pipeline..."}
+        elapsedSeconds={elapsedSeconds}
       />
       <section className="info-banner">
-        <strong>Elapsed:</strong> {elapsedSeconds}s
+        <strong>Elapsed:</strong> {formatElapsed(elapsedSeconds)}
       </section>
 
       {error ? (
