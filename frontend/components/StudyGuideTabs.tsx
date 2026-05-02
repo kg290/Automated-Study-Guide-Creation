@@ -499,7 +499,7 @@ export function StudyGuideTabs({ result }: StudyGuideTabsProps) {
               <div className="study-card-stage qa-question-row">
                 <button
                   type="button"
-                  className="study-card-nav"
+                  className="study-card-nav study-card-nav-left"
                   onClick={() => moveFlashcard(-1)}
                   disabled={cleanResult.flashcards.length === 0}
                 >
@@ -553,7 +553,7 @@ export function StudyGuideTabs({ result }: StudyGuideTabsProps) {
 
                 <button
                   type="button"
-                  className="study-card-nav"
+                  className="study-card-nav study-card-nav-right"
                   onClick={() => moveFlashcard(1)}
                   disabled={cleanResult.flashcards.length === 0}
                 >
@@ -627,7 +627,7 @@ export function StudyGuideTabs({ result }: StudyGuideTabsProps) {
               <div className="study-card-stage qa-question-row">
                 <button
                   type="button"
-                  className="study-card-nav"
+                  className="study-card-nav study-card-nav-left"
                   onClick={() => moveQa(-1)}
                   disabled={cleanResult.qa_sets.length === 0}
                 >
@@ -679,7 +679,7 @@ export function StudyGuideTabs({ result }: StudyGuideTabsProps) {
 
                 <button
                   type="button"
-                  className="study-card-nav"
+                  className="study-card-nav study-card-nav-right"
                   onClick={() => moveQa(1)}
                   disabled={cleanResult.qa_sets.length === 0}
                 >

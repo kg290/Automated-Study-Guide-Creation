@@ -1882,22 +1882,26 @@ body {
 .study-card-stage {
   position: relative;
   z-index: 1;
-  display: grid;
-  grid-template-columns: 56px minmax(0, 1fr) 56px;
-  gap: 0.9rem;
+  display: flex;
+  justify-content: center;
   align-items: center;
   min-height: 0;
   align-self: stretch;
+  padding: 0 84px;
 }
 
 .study-card-motion-shell {
-  display: inline-block;
+  display: block;
   width: fit-content;
   max-width: 100%;
-  justify-self: center;
+  margin-inline: auto;
+  flex: 0 0 auto;
 }
 
 .study-card-nav {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
   width: 56px;
   height: 56px;
   display: inline-flex;
@@ -1908,6 +1912,15 @@ body {
   border: 1px solid rgba(255, 255, 255, 0.12);
   color: rgba(255, 255, 255, 0.92);
   cursor: pointer;
+  z-index: 3;
+}
+
+.study-card-nav-left {
+  left: 0;
+}
+
+.study-card-nav-right {
+  right: 0;
 }
 
 .study-card-nav:disabled {
@@ -2168,11 +2181,13 @@ body {
 }
 
 .electric-border-card-flashcard {
-  width: min(100%, 620px);
+  width: 620px;
+  max-width: 100%;
 }
 
 .electric-border-card-qa {
-  width: min(100%, 620px);
+  width: 620px;
+  max-width: 100%;
 }
 
 .electric-border-card .eb-content {
@@ -2194,6 +2209,7 @@ body {
 .electric-border-card-flashcard .study-card,
 .electric-border-card-qa .study-card {
   width: 100%;
+  max-width: none;
 }
 
 .eb-canvas-container {
